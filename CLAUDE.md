@@ -24,4 +24,3 @@ I am Pankaj Soni, a generative AI engineer. My task is to develop a RAG (Retriev
 1. Maintain the architecture document; any change that affects the architecture — including tech stack choices — must be reflected there, in the `architecture` directory, not here.
 2. Save planning-related documents in the `specs` directory, filenames prefixed with a serial number and named for the feature they describe (e.g. `001-document-ingestion-pipeline.md`).
 3. Keep `README.md` at the project root up to date after any change that affects setup or how the application is run — dependencies, configuration, or run/start commands. It must always reflect the actual current steps to get the application running, not aspirational or outdated ones.
-4. All my discussions in chat should be saved in project_transcripts in md files as it is, save it to D:\online_assessment\develope_rag_model\project_transcripts\2026-09-17-functional-requirements-spec.md for now.
