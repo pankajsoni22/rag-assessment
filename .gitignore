@@ -3,6 +3,15 @@
 .env.*
 !.env.example
 
+# Python / uv
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Local vector store data
+project/storage/.chroma_data/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db
