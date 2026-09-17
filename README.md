@@ -46,12 +46,12 @@ Open the frontend URL Streamlit prints (typically `http://localhost:8501`). "Set
 - `specs/` — planning documents, one per feature/phase
 
 ## Testing
-Each tier is tested independently with `pytest`:
+Each tier is tested independently with `pytest`. Run from the repo root with an explicit path (bare `pytest` from the root also picks up `tests/e2e`, which needs the Playwright browser installed — see below):
 
 ```sh
-uv run --package rag-backend pytest
-uv run --package rag-storage pytest
-uv run --package rag-frontend pytest
+uv run --package rag-backend pytest project/backend/tests
+uv run --package rag-storage pytest project/storage/tests
+uv run --package rag-frontend pytest project/frontend/tests
 ```
 
 End-to-end tests drive a real browser against the real frontend + backend (with only the Gemini/Groq calls faked — everything else is real, including Chroma). They need Playwright's browser binary and OS-level dependencies installed once (requires `sudo`):

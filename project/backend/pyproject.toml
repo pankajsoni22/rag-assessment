@@ -24,6 +24,9 @@ dev = [
 [tool.uv.sources]
 rag-storage = { workspace = true }
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
