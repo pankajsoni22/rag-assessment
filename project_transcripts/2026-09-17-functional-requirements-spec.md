@@ -114,3 +114,44 @@ Then asked the assistant to re-read `CLAUDE.md` and apply it.
 **Assistant**: re-read `CLAUDE.md`, confirmed the specified path already
 matched this file exactly (no rename needed), and appended this section to
 keep the transcript current per the rule.
+
+---
+
+## 5. Committing and pushing session work
+
+**User**: asked to commit and push to git.
+
+**Assistant**: checked `git status`/`diff`, confirmed `.env` stayed
+correctly gitignored, staged `CLAUDE.md` plus all the untracked
+documentation (`.env.example`, `README.md`, `architecture/`,
+`project_transcripts/`, `specs/001-rag-generator-requirements.md`),
+committed, and pushed to `origin/main` (`630683d..93a619b`).
+
+---
+
+## 6. Designing the application architecture
+
+**User**: asked to design the application's architecture — modules, how
+they interact, diagrams if possible.
+
+**Assistant**: before finalizing, asked three data-model questions since
+they were genuine architectural decisions rather than things to assume:
+- How to track document/set metadata (filenames, status, set membership)
+  → **User: Chroma metadata only, no second database.**
+- Whether conversation history needs to survive a backend restart →
+  **User: in-memory per session is enough.**
+- Whether an in-flight "processing" ingestion status needs to be
+  recoverable after a crash → **User: no, re-upload is acceptable.**
+
+With those settled, wrote the full design into `architecture/architecture.md`,
+replacing the earlier placeholder: guiding principles, backend modules table
+(API layer, Document & Set Management, Ingestion, Document Loaders behind a
+shared interface, Chunking, Embedding, Retrieval, Generation, Conversation,
+RAG Orchestrator, Config), the storage tier design (Chroma-only, metadata
+carried on each chunk, no second store), the frontend modules (API Client,
+Set/Document Manager UI, Chat UI, Session State), the design patterns used
+(Strategy for loaders, Adapter/Repository for the vector store, a thin
+service layer, an Orchestrator for the query flow), a Mermaid component
+diagram, and two Mermaid sequence diagrams (document ingestion; question
+answering). Left API route design and retrieval/prompt tuning as open items
+for when the backend is actually scaffolded.
