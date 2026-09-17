@@ -13,4 +13,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=_REPO_ROOT / ".env",
         env_file_encoding="utf-8",
+        # The .env is shared across all tiers by design (see .env.example) - e.g.
+        # BACKEND_URL is frontend-only. Backend's Settings must tolerate keys it
+        # doesn't recognize rather than fail validation because of them.
+        extra="ignore",
     )
