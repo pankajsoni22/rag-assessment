@@ -27,6 +27,10 @@ uv run --package rag-e2e pytest tests/e2e
 ```
 Since the Playwright selectors in the test files (ARIA roles, `data-testid`s) were written from Streamlit's documented conventions rather than verified against a live browser, minor selector fixes may be needed the first time they're actually run.
 
+**Final comprehensive run.** Since the browser can't launch here, `tests/e2e/manual_final_run.py` was written as a supplementary check: it starts the same real backend + real frontend (only Gemini/Groq faked) as the Playwright harness and drives the entire user journey through real HTTP instead of a browser — create set, upload a document, confirm `ready` status, ask a grounded question and get citations back, ask a follow-up in the same session, ask a question against an empty set and get the explicit not-found state, remove a document, delete a set, and confirm an unsupported extension and a corrupt PDF are both rejected cleanly (422/400) without leaking internals. Also checked that both the frontend's root page and `/chat` page render (`200`) while pointed at the live backend.
+
+Run: `uv run --package rag-e2e python3 tests/e2e/manual_final_run.py` — **21/21 checks passed.** (One assertion in the script itself was initially wrong — it expected a set's document list to be empty after removing one document, without accounting for an earlier empty-file-upload test in the same set that was correctly rejected but still recorded as an `error`-status document; fixed to check the removed document's id specifically.)
+
 ## E2E Test Harness Design
 
 New workspace member `tests/e2e/` (sibling to `project/`, not itself an application tier — `[tool.uv] package = false`, added to the root `pyproject.toml`'s `[tool.uv.workspace] members`).
