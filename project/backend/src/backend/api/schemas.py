@@ -28,3 +28,25 @@ class DocumentResponse(BaseModel):
     format: DocumentFormat
     status: IngestionStatus
     uploaded_at: datetime
+
+
+class QueryRequest(BaseModel):
+    question: str
+    set_id: str | None = None
+    session_id: str
+
+
+class CitationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    document_id: str
+    filename: str
+    chunk_id: str
+
+
+class AnswerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    answer: str
+    citations: list[CitationResponse]
+    grounded: bool

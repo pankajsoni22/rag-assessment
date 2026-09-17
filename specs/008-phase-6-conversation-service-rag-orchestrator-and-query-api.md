@@ -1,6 +1,8 @@
-# Phase 6: Conversation Service, RAG Orchestrator & Query API (Plan)
+# Phase 6: Conversation Service, RAG Orchestrator & Query API
 
-Plan for Phase 6 of `specs/002-master-development-plan.md`: the Conversation Service, the RAG Orchestrator tying Conversation/Retrieval/Generation together, and the FastAPI query endpoint. Completes the question-answering vertical slice end-to-end. **Not yet implemented** — this document describes the intended design for review before any code is written.
+Plan and record for Phase 6 of `specs/002-master-development-plan.md`: the Conversation Service, the RAG Orchestrator tying Conversation/Retrieval/Generation together, and the FastAPI query endpoint. Completes the question-answering vertical slice end-to-end.
+
+**Status: implemented as described below**, with `top_k` defaulted to `5` (placeholder, per the Open Items tuning deferral). `uv run --package rag-backend pytest` — 58 passed (up from 46 after Phase 5), including `test_conversation_service.py`, `test_rag_orchestrator.py`, and `test_query_routes.py`. The composition root (`backend/api/dependencies.py`) was refactored to share a single cached `EmbeddingService` between ingestion and retrieval rather than constructing a `GeminiEmbeddingClient` twice.
 
 This design builds directly on `architecture/backend-low-level-design.md` and the (also not-yet-implemented) Phase 5 plan, `specs/007-phase-5-retrieval-and-generation-services.md`, which already defines the domain types (`RetrievedChunk`, `ConversationTurn`, `Role`, `Citation`, `AnswerResult`) and the `RetrievalService`/`GenerationService` signatures this phase's `RAGOrchestrator` will call.
 
