@@ -6,7 +6,7 @@ import httpx
 import streamlit as st
 
 from frontend.config import Settings
-from frontend.models import DocumentSetView, DocumentView
+from frontend.models import AnswerView, CitationView, DocumentSetView, DocumentView
 
 
 class ApiClient:
@@ -45,6 +45,18 @@ class ApiClient:
     def remove_document(self, document_id: str) -> None:
         response = self._client.delete(f"/documents/{document_id}")
         response.raise_for_status()
+
+    def ask(self, question: str, set_id: str | None, session_id: str) -> AnswerView:
+        response = self._client.post(
+            "/query", json={"question": question, "set_id": set_id, "session_id": session_id}
+        )
+        response.raise_for_status()
+        data = response.json()
+        return AnswerView(
+            answer=data["answer"],
+            citations=[CitationView(**item) for item in data["citations"]],
+            grounded=data["grounded"],
+        )
 
     @staticmethod
     def _parse_set(data: dict) -> DocumentSetView:

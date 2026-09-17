@@ -19,3 +19,25 @@ class DocumentView:
     format: str
     status: str
     uploaded_at: datetime
+
+
+@dataclass(frozen=True)
+class CitationView:
+    document_id: str
+    filename: str
+    chunk_id: str
+
+
+@dataclass(frozen=True)
+class AnswerView:
+    answer: str
+    citations: list[CitationView]
+    grounded: bool
+
+
+@dataclass(frozen=True)
+class ChatMessageView:
+    role: str
+    content: str
+    citations: list[CitationView] | None = None
+    grounded: bool | None = None

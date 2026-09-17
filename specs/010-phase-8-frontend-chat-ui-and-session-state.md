@@ -1,6 +1,8 @@
-# Phase 8: Frontend — Chat UI & Session State (Plan)
+# Phase 8: Frontend — Chat UI & Session State
 
-Plan for Phase 8 of `specs/002-master-development-plan.md`: the Chat UI, wired to Phase 6's query endpoint. Completes the full user-facing product. **Not yet implemented** — this document describes the intended design for review before any code is written.
+Plan and record for Phase 8 of `specs/002-master-development-plan.md`: the Chat UI, wired to Phase 6's query endpoint. Completes the full user-facing product.
+
+**Status: implemented as described below.** `uv run --package rag-frontend pytest` — 21 passed (up from 14 after Phase 7), including `test_chat_page.py` and the new `ApiClient.ask` tests. Live smoke test: real backend + real frontend, `/health` and both the root and `/chat` pages returned 200 with no errors in either log.
 
 This phase extends files Phase 7 already plans to create (`api_client.py`, `models.py`, `session_state.py`, `pages/chat.py`'s placeholder) rather than creating a parallel set — see `specs/009-phase-7-frontend-api-client-and-set-document-manager-ui.md`.
 

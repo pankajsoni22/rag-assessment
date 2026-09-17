@@ -5,6 +5,7 @@ import httpx
 import pytest
 
 from frontend.api_client import ApiClient
+from frontend.models import CitationView
 
 
 def _client_with_handler(handler) -> ApiClient:
@@ -123,3 +124,44 @@ def test_raises_on_http_error():
 
     with pytest.raises(httpx.HTTPStatusError):
         client.delete_set("missing")
+
+
+def test_ask_posts_question_and_parses_grounded_answer():
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url.path == "/query"
+        assert json.loads(request.read()) == {
+            "question": "What is X?",
+            "set_id": "s1",
+            "session_id": "sess-1",
+        }
+        return httpx.Response(
+            200,
+            json={
+                "answer": "X is 42.",
+                "citations": [{"document_id": "d1", "filename": "a.txt", "chunk_id": "c1"}],
+                "grounded": True,
+            },
+        )
+
+    client = _client_with_handler(handler)
+
+    result = client.ask(question="What is X?", set_id="s1", session_id="sess-1")
+
+    assert result.answer == "X is 42."
+    assert result.grounded is True
+    assert result.citations == [CitationView(document_id="d1", filename="a.txt", chunk_id="c1")]
+
+
+def test_ask_parses_not_found_answer():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200, json={"answer": "Not found.", "citations": [], "grounded": False}
+        )
+
+    client = _client_with_handler(handler)
+
+    result = client.ask(question="What is X?", set_id=None, session_id="sess-1")
+
+    assert result.grounded is False
+    assert result.citations == []
