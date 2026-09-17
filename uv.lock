@@ -2865,6 +2865,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pypdf" },
     { name = "python-docx" },
+    { name = "python-multipart" },
     { name = "rag-storage" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -2883,6 +2884,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.6" },
     { name = "pypdf", specifier = ">=5.0" },
     { name = "python-docx", specifier = ">=1.1" },
+    { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "rag-storage", editable = "project/storage" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.32" },
 ]
