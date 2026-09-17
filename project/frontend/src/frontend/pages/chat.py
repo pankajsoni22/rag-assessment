@@ -13,6 +13,11 @@ from frontend.session_state import (
 )
 
 st.title("Chat")
+st.caption(
+    "Ask questions in plain language. Answers are grounded only in your "
+    "uploaded documents — if nothing relevant is found, you'll see an "
+    "explicit **not found** notice instead of a guess."
+)
 
 api_client = get_api_client()
 
@@ -31,6 +36,10 @@ chosen_scope = st.selectbox(
     options=scope_options,
     index=scope_index,
     format_func=lambda sid: "Search everything" if sid is None else set_names[sid],
+    help=(
+        "Scope this question to one set, or search everything you've "
+        "uploaded. Independent from the set selected on Sets & Documents."
+    ),
 )
 set_chat_set_id(chosen_scope)
 

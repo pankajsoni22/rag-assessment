@@ -1,0 +1,8 @@
+# Streamlit's default (200MB) is misleading for this app: it advertises a
+# limit far beyond what actually works. Both external APIs are free-tier and
+# rate-limited (see architecture/tech-stack.md), and a large document
+# produces many chunks -> many embedding calls -> a near-certain rate limit
+# before ingestion finishes. 10MB comfortably covers small-to-medium real
+# PDFs/text files while keeping the advertised limit honest.
+[server]
+maxUploadSize = 10

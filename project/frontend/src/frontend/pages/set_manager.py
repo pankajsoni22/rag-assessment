@@ -6,13 +6,29 @@ from frontend.api_client import get_api_client
 from frontend.session_state import get_selected_set_id, set_selected_set_id
 
 st.title("Sets & Documents")
+st.caption(
+    "Create a set, then upload documents to it. Once a document shows "
+    "**ready**, you can ask questions about it on the Chat page."
+)
+st.info(
+    "📄 **Use small files.** This app runs on free-tier Gemini/Groq APIs with "
+    "strict rate limits — a small PDF or plain text file (a few pages) is far "
+    "more likely to process successfully than a large or scanned document. "
+    "Uploads are capped at 10MB.",
+    icon="ℹ️",
+)
 
 api_client = get_api_client()
 
-st.subheader("Sets")
+st.subheader(
+    "Sets",
+    help="A set groups related documents so you can scope your questions to just that group later, in Chat.",
+)
 
 with st.form("create_set_form", clear_on_submit=True):
-    new_set_name = st.text_input("New set name")
+    new_set_name = st.text_input(
+        "New set name", help="A short, descriptive name, e.g. 'HR Policies' or 'Research Papers'."
+    )
     submitted = st.form_submit_button("Create set")
     if submitted and new_set_name:
         try:
@@ -36,7 +52,11 @@ else:
     selected_id = get_selected_set_id()
     index = options.index(selected_id) if selected_id in options else 0
     chosen_id = st.selectbox(
-        "Select a set", options=options, index=index, format_func=lambda sid: set_names[sid]
+        "Select a set",
+        options=options,
+        index=index,
+        format_func=lambda sid: set_names[sid],
+        help="The set to view, upload to, or manage documents for.",
     )
     set_selected_set_id(chosen_id)
 
@@ -62,9 +82,20 @@ else:
                 st.session_state.confirm_delete_set = None
                 st.rerun()
 
-    st.subheader(f"Documents in '{set_names[chosen_id]}'")
+    st.subheader(
+        f"Documents in '{set_names[chosen_id]}'",
+        help=(
+            "**processing** — being read and indexed (embedded) · "
+            "**ready** — indexed and available for questions in Chat · "
+            "**error** — couldn't be processed (see the message shown at upload time)"
+        ),
+    )
 
-    uploaded_file = st.file_uploader("Upload a document", type=["pdf", "docx", "txt", "md"])
+    uploaded_file = st.file_uploader(
+        "Upload a document",
+        type=["pdf", "docx", "txt", "md"],
+        help="PDF, Word, plain text, or Markdown. Prefer small, text-based files — see the note above.",
+    )
     if uploaded_file is not None and st.button("Upload"):
         try:
             with st.spinner(f"Uploading and processing '{uploaded_file.name}'..."):
