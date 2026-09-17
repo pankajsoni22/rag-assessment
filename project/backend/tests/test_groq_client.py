@@ -26,3 +26,27 @@ def test_complete_raises_rate_limited_error_on_groq_rate_limit():
 
     with pytest.raises(RateLimitedError):
         client.complete([{"role": "user", "content": "hi"}])
+
+
+def test_complete_raises_rate_limited_error_on_groq_overload():
+    # InternalServerError (503) is a separate subclass from RateLimitError
+    # (429) but represents the same "temporarily unavailable, retry" case.
+    client = GroqClient(api_key="fake")
+    request = httpx.Request("POST", "http://test")
+    response = httpx.Response(503, request=request)
+    error = groq.InternalServerError("overloaded", response=response, body=None)
+    client._client.chat.completions.create = MagicMock(side_effect=error)
+
+    with pytest.raises(RateLimitedError):
+        client.complete([{"role": "user", "content": "hi"}])
+
+
+def test_complete_reraises_non_rate_limit_api_status_errors():
+    client = GroqClient(api_key="fake")
+    request = httpx.Request("POST", "http://test")
+    response = httpx.Response(404, request=request)
+    error = groq.NotFoundError("model not found", response=response, body=None)
+    client._client.chat.completions.create = MagicMock(side_effect=error)
+
+    with pytest.raises(groq.NotFoundError):
+        client.complete([{"role": "user", "content": "hi"}])

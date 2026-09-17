@@ -27,6 +27,11 @@ class GroqClient:
             response = self._client.chat.completions.create(
                 model=_MODEL, messages=messages, temperature=_TEMPERATURE
             )
-        except groq.RateLimitError as exc:
-            raise RateLimitedError("Groq generation rate limit or quota exceeded.") from exc
+        except groq.APIStatusError as exc:
+            # 429 (RateLimitError) = rate limit/quota. 503 (InternalServerError,
+            # a separate subclass) = Groq temporarily overloaded - both are
+            # "wait and retry", not a real failure worth a generic message.
+            if exc.status_code in (429, 503):
+                raise RateLimitedError("Groq generation rate limit or quota exceeded.") from exc
+            raise
         return response.choices[0].message.content

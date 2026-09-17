@@ -54,6 +54,20 @@ def test_embed_texts_raises_rate_limited_error_on_429():
         client.embed_texts(["hello"])
 
 
+def test_embed_texts_raises_rate_limited_error_on_503_overload():
+    # ServerError (503 UNAVAILABLE) is a separate subclass from ClientError
+    # (429 RESOURCE_EXHAUSTED) but represents the same "temporarily
+    # unavailable, retry" case - very common on the free tier under load.
+    client = GeminiEmbeddingClient(api_key="fake")
+    error = genai_errors.ServerError(
+        503, {"error": {"message": "model overloaded", "status": "UNAVAILABLE"}}
+    )
+    client._client.models.embed_content = MagicMock(side_effect=error)
+
+    with pytest.raises(RateLimitedError):
+        client.embed_texts(["hello"])
+
+
 def test_embed_texts_reraises_non_rate_limit_api_errors():
     client = GeminiEmbeddingClient(api_key="fake")
     error = genai_errors.ClientError(

@@ -13,8 +13,7 @@ st.caption(
 st.info(
     "📄 **Use small files.** This app runs on free-tier Gemini/Groq APIs with "
     "strict rate limits — a small PDF or plain text file (a few pages) is far "
-    "more likely to process successfully than a large or scanned document. "
-    "Uploads are capped at 10MB.",
+    "more likely to process successfully than a large or scanned document.",
     icon="ℹ️",
 )
 

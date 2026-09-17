@@ -39,7 +39,11 @@ class GeminiEmbeddingClient:
             try:
                 response = self._client.models.embed_content(model=_MODEL, contents=batch)
             except genai_errors.APIError as exc:
-                if exc.code == 429:
+                # 429 RESOURCE_EXHAUSTED = quota/rate limit. 503 UNAVAILABLE
+                # (a separate ServerError subclass, not ClientError) = Gemini
+                # temporarily overloaded - very common on the free tier under
+                # load. Both are "wait and retry", not "your file is broken".
+                if exc.code in (429, 503):
                     raise RateLimitedError(
                         "Gemini embedding rate limit or quota exceeded."
                     ) from exc

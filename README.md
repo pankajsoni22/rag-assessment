@@ -37,7 +37,7 @@ uv run --package rag-frontend streamlit run project/frontend/src/frontend/app.py
 
 Open the frontend URL Streamlit prints (typically `http://localhost:8501`). "Sets & Documents" lets you create a set and upload PDF/Word/text/Markdown files; "Chat" lets you ask questions, optionally scoped to one set, with grounded answers and citations.
 
-**Use small files.** Both external APIs are free-tier and rate-limited (see `architecture/tech-stack.md`) — a large document produces many chunks, and each chunk needs its own embedding call, so big or scanned documents commonly hit a rate limit or fail with "no readable text content" before finishing. Prefer small, text-based PDFs or plain text files. Uploads are capped at 10MB (`.streamlit/config.toml`) — that's a UI-level sanity limit, not a guarantee that a 10MB file will process cleanly on the free tier.
+**Use small files.** Both external APIs are free-tier and rate-limited (see `architecture/tech-stack.md`) — a large document produces many chunks, and each chunk needs its own embedding call, so big or scanned documents commonly hit a rate limit or fail with "no readable text content" before finishing. Prefer small, text-based PDFs or plain text files. There's a UI-level upload size sanity limit (`.streamlit/config.toml`) — not a guarantee that any file under it will process cleanly on the free tier.
 
 ## Project Structure
 - `project/backend/` — FastAPI app and RAG pipeline (`rag-backend` package)
