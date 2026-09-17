@@ -13,6 +13,19 @@ def _fake_embed_response(batch: list[str]):
     return response
 
 
+def test_client_has_retry_backoff_with_jitter_configured():
+    # Regression guard: the SDK's retry machinery only activates when
+    # retry_options is explicitly set - left unset (the default), it
+    # silently resolves to zero retries, which was the actual bug behind a
+    # transient 429/503 failing immediately instead of backing off.
+    client = GeminiEmbeddingClient(api_key="fake")
+    retry_options = client._client._api_client._http_options.retry_options
+
+    assert retry_options is not None
+    assert retry_options.attempts is not None and retry_options.attempts > 1
+    assert retry_options.jitter is None or retry_options.jitter > 0
+
+
 def test_embed_texts_splits_into_batches_and_preserves_order():
     client = GeminiEmbeddingClient(api_key="fake")
     texts = [f"text-{i}" for i in range(45)]  # 3 batches at _BATCH_SIZE=20

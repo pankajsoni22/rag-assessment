@@ -12,6 +12,11 @@ _MODEL = "openai/gpt-oss-120b"
 # Pinned low (not the API default) so the same question against the same
 # documents gives a consistent, dependable answer — spec B1.2.
 _TEMPERATURE = 0
+# The SDK already backs off exponentially with jitter between retries
+# (_calculate_retry_timeout in groq/_base_client.py) - this just raises the
+# attempt count from the SDK's default of 2, matching Gemini's client-side
+# retry budget for a rate limit/temporary-overload (429/503) more closely.
+_MAX_RETRIES = 4
 
 
 class GroqClient:
@@ -20,7 +25,7 @@ class GroqClient:
     """
 
     def __init__(self, api_key: str) -> None:
-        self._client = Groq(api_key=api_key)
+        self._client = Groq(api_key=api_key, max_retries=_MAX_RETRIES)
 
     def complete(self, messages: list[dict[str, str]]) -> str:
         try:

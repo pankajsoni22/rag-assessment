@@ -8,6 +8,15 @@ from backend.clients.errors import RateLimitedError
 from backend.clients.groq_client import GroqClient
 
 
+def test_client_has_retries_raised_above_sdk_default():
+    # The SDK already backs off exponentially with jitter between retries;
+    # this just guards that we've raised the attempt count above the SDK's
+    # default of 2, matching Gemini's client-side retry budget.
+    client = GroqClient(api_key="fake")
+
+    assert client._client.max_retries > 2
+
+
 def test_complete_returns_message_content():
     client = GroqClient(api_key="fake")
     response = MagicMock()

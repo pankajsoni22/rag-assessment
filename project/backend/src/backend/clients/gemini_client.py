@@ -20,6 +20,14 @@ _BATCH_SIZE = 20
 # normal internet latency; matches the generous client-side timeout the
 # frontend now uses for the same reason.
 _TIMEOUT_MS = 120_000
+# The SDK's exponential-backoff-with-jitter retry machinery only activates
+# when retry_options is explicitly set - left as None (the default), it
+# resolves to zero retries (stop_after_attempt(1)), which is exactly why a
+# transient 429/503 was previously failing immediately instead of backing
+# off and retrying. max_delay capped below the SDK's own 60s default so a
+# multi-batch upload's worst-case total retry time stays well inside the
+# frontend's 180s request timeout even if several batches each retry once.
+_RETRY_OPTIONS = types.HttpRetryOptions(attempts=4, initial_delay=1.0, max_delay=20.0)
 
 
 class GeminiEmbeddingClient:
@@ -29,7 +37,8 @@ class GeminiEmbeddingClient:
 
     def __init__(self, api_key: str) -> None:
         self._client = genai.Client(
-            api_key=api_key, http_options=types.HttpOptions(timeout=_TIMEOUT_MS)
+            api_key=api_key,
+            http_options=types.HttpOptions(timeout=_TIMEOUT_MS, retry_options=_RETRY_OPTIONS),
         )
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
