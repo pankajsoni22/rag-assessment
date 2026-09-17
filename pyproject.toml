@@ -1,2 +1,8 @@
 [tool.uv.workspace]
 members = ["project/backend", "project/storage", "project/frontend"]
+
+[tool.uv]
+# Hardlinked installs (uv's default) leave site-packages files with st_nlink > 1,
+# which nltk's data loader (a llama-index-core dependency) refuses to open as a
+# security precaution (CWE-59). Copy mode avoids that false positive.
+link-mode = "copy"
