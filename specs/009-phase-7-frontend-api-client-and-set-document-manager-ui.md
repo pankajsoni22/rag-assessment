@@ -1,6 +1,8 @@
-# Phase 7: Frontend — API Client & Set/Document Manager UI (Plan)
+# Phase 7: Frontend — API Client & Set/Document Manager UI
 
-Plan for Phase 7 of `specs/002-master-development-plan.md`: the API Client (the frontend's sole HTTP bridge to the backend) and the Set & Document Manager UI, wired to Phase 4's ingestion endpoints. **Not yet implemented** — this document describes the intended design for review before any code is written.
+Plan and record for Phase 7 of `specs/002-master-development-plan.md`: the API Client (the frontend's sole HTTP bridge to the backend) and the Set & Document Manager UI, wired to Phase 4's ingestion endpoints.
+
+**Status: implemented as described below**, with "Delete set" using a two-step confirm (click "Delete this set" → warning + Confirm/Cancel), resolving the Open Item. `uv run --package rag-frontend pytest` — 14 passed (`test_api_client.py` via `httpx.MockTransport`, `test_set_manager_page.py` via `AppTest` with a faked `ApiClient`). Live smoke test: real backend + real frontend started together, `/health` responded and the frontend served the navigation shell at `http://127.0.0.1:8502` with no errors in either log.
 
 ## Decisions (confirmed with the user)
 

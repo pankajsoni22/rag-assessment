@@ -2920,6 +2920,7 @@ version = "0.1.0"
 source = { editable = "project/frontend" }
 dependencies = [
     { name = "httpx" },
+    { name = "pydantic-settings" },
     { name = "streamlit" },
 ]
 
@@ -2931,6 +2932,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx", specifier = ">=0.27" },
+    { name = "pydantic-settings", specifier = ">=2.6" },
     { name = "streamlit", specifier = ">=1.39" },
 ]
 
