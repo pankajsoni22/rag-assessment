@@ -10,6 +10,10 @@ from backend.services.document_set_service import DocumentSetService
 from backend.services.embedding_service import EmbeddingService
 
 
+class EmptyDocumentError(Exception):
+    """Raised when a document produces no usable text/chunks (e.g. an empty file)."""
+
+
 class IngestionService:
     """Orchestrates Loader -> Chunking -> Embedding -> VectorStore for one upload."""
 
@@ -35,6 +39,8 @@ class IngestionService:
             loader = self._loader_registry.get_loader(format)
             text = loader.parse(file)
             chunks = self._chunker.chunk(text, document_id=document.id, set_id=set_id)
+            if not chunks:
+                raise EmptyDocumentError(f"'{filename}' has no readable text content.")
             vectors = self._embedder.embed(chunks)
 
             uploaded_at = document.uploaded_at.isoformat()

@@ -51,9 +51,10 @@ if question:
 
     with st.chat_message("assistant"):
         try:
-            result = api_client.ask(
-                question=question, set_id=chosen_scope, session_id=get_session_id()
-            )
+            with st.spinner("Thinking..."):
+                result = api_client.ask(
+                    question=question, set_id=chosen_scope, session_id=get_session_id()
+                )
             st.write(result.answer)
             if result.grounded is False:
                 st.info("Not found in the documents.")

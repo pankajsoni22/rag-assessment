@@ -67,7 +67,8 @@ else:
     uploaded_file = st.file_uploader("Upload a document", type=["pdf", "docx", "txt", "md"])
     if uploaded_file is not None and st.button("Upload"):
         try:
-            api_client.upload_document(chosen_id, uploaded_file.name, uploaded_file.getvalue())
+            with st.spinner(f"Uploading and processing '{uploaded_file.name}'..."):
+                api_client.upload_document(chosen_id, uploaded_file.name, uploaded_file.getvalue())
             st.success(f"Uploaded '{uploaded_file.name}'.")
             st.rerun()
         except Exception as exc:

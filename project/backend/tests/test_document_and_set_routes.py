@@ -98,6 +98,40 @@ def test_upload_document_unknown_set_returns_404(client):
     assert response.status_code == 404
 
 
+def test_upload_empty_document_returns_422_with_plain_language_detail(client):
+    set_id = client.post("/sets", json={"name": "Notes"}).json()["id"]
+
+    response = client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("empty.txt", io.BytesIO(b""), "text/plain")},
+    )
+
+    assert response.status_code == 422
+    assert "empty.txt" in response.json()["detail"]
+
+    # The document is still visible, marked as an error, not silently dropped.
+    [document] = client.get("/documents", params={"set_id": set_id}).json()
+    assert document["status"] == "error"
+
+
+def test_upload_corrupt_pdf_returns_422_without_leaking_internals(client):
+    set_id = client.post("/sets", json={"name": "Notes"}).json()["id"]
+
+    response = client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("bad.pdf", io.BytesIO(b"not a real pdf"), "application/pdf")},
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert "bad.pdf" in detail
+    # Plain-language message only — no raw exception class names or stack details.
+    assert "PdfStreamError" not in detail
+    assert "Traceback" not in detail
+
+
 def test_get_document_unknown_id_returns_404(client):
     response = client.get("/documents/missing")
 

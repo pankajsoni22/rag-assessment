@@ -13,7 +13,7 @@ from backend.services.document_set_service import (
     DocumentSetService,
     SetNotFoundError,
 )
-from backend.services.ingestion_service import IngestionService
+from backend.services.ingestion_service import EmptyDocumentError, IngestionService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -39,6 +39,13 @@ def upload_document(
             )
         except SetNotFoundError as exc:
             raise HTTPException(status_code=404, detail=f"Set not found: {exc}") from exc
+        except EmptyDocumentError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Could not process '{filename}': the file may be corrupted or unreadable.",
+            ) from exc
 
     return DocumentResponse.model_validate(document)
 

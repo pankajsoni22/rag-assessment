@@ -5,7 +5,7 @@ from backend.loaders.registry import default_registry
 from backend.services.chunking_service import ChunkingService
 from backend.services.document_set_service import DocumentSetService, SetNotFoundError
 from backend.services.embedding_service import EmbeddingService
-from backend.services.ingestion_service import IngestionService
+from backend.services.ingestion_service import EmptyDocumentError, IngestionService
 from storage.chroma_vector_store import ChromaVectorStore
 
 
@@ -73,3 +73,19 @@ def test_ingest_marks_document_error_on_loader_failure(wiring, tmp_path):
 
     [document] = doc_set_service.list_documents(set_id=document_set.id)
     assert document.status == IngestionStatus.ERROR
+
+
+def test_ingest_empty_file_raises_and_marks_error(wiring, tmp_path):
+    ingestion_service, doc_set_service, vector_store = wiring
+    document_set = doc_set_service.create_set("Notes")
+    file = tmp_path / "empty.txt"
+    file.write_text("", encoding="utf-8")
+
+    with pytest.raises(EmptyDocumentError):
+        ingestion_service.ingest(
+            file=file, filename="empty.txt", format=DocumentFormat.TEXT, set_id=document_set.id
+        )
+
+    [document] = doc_set_service.list_documents(set_id=document_set.id)
+    assert document.status == IngestionStatus.ERROR
+    assert vector_store.query(embedding=[0.0, 0.0], top_k=5) == []
