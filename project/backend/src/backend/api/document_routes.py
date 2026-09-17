@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import tempfile
 from pathlib import Path
 
@@ -14,6 +15,8 @@ from backend.services.document_set_service import (
     SetNotFoundError,
 )
 from backend.services.ingestion_service import EmptyDocumentError, IngestionService
+
+logger = logging.getLogger("backend")
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -42,6 +45,9 @@ def upload_document(
         except EmptyDocumentError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except Exception as exc:
+            # Detail shown to the user stays generic (never leak internals,
+            # per B6 privacy) - the real cause is logged here instead.
+            logger.exception("Ingestion failed for '%s' (set_id=%s)", filename, set_id)
             raise HTTPException(
                 status_code=422,
                 detail=f"Could not process '{filename}': the file may be corrupted or unreadable.",
