@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from groq import Groq
 
-_MODEL = "llama-3.3-70b-versatile"
+# "llama-3.3-70b-versatile" (specs/007's original placeholder) 404s - not
+# available on this account/catalog anymore. Confirmed via client.models.list()
+# that openai/gpt-oss-120b is currently available and works.
+_MODEL = "openai/gpt-oss-120b"
 # Pinned low (not the API default) so the same question against the same
 # documents gives a consistent, dependable answer — spec B1.2.
 _TEMPERATURE = 0

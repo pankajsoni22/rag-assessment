@@ -3,7 +3,11 @@ from __future__ import annotations
 from google import genai
 from google.genai import types
 
-_MODEL = "text-embedding-004"
+# "text-embedding-004" (architecture.md's original placeholder) 404s against
+# the live API - deprecated. Confirmed via client.models.list() (filtered to
+# models supporting embedContent) that gemini-embedding-001 is the current
+# stable embeddings model.
+_MODEL = "gemini-embedding-001"
 # Gemini's embed_content endpoint accepts a batch, but a full document's
 # worth of chunks in one request risks exceeding request size/rate limits
 # and makes any single failure lose all prior work in that call. Batching
