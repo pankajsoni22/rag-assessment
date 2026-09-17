@@ -13,4 +13,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=_REPO_ROOT / ".env",
         env_file_encoding="utf-8",
+        # The .env is shared across all tiers by design (see .env.example) - e.g.
+        # GROQ_API_KEY/GOOGLE_API_KEY/CHROMA_PERSIST_DIR are backend-only.
+        # Frontend's Settings must tolerate keys it doesn't recognize.
+        extra="ignore",
     )
