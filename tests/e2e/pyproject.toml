@@ -1,0 +1,22 @@
+[project]
+name = "rag-e2e"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pytest>=8.3",
+    "pytest-playwright>=0.5",
+    "playwright>=1.47",
+    "httpx>=0.27",
+    "uvicorn[standard]>=0.32",
+    "rag-backend",
+    "rag-storage",
+    "rag-frontend",
+]
+
+[tool.uv.sources]
+rag-backend = { workspace = true }
+rag-storage = { workspace = true }
+rag-frontend = { workspace = true }
+
+[tool.uv]
+package = false

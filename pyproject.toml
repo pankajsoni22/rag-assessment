@@ -1,5 +1,5 @@
 [tool.uv.workspace]
-members = ["project/backend", "project/storage", "project/frontend"]
+members = ["project/backend", "project/storage", "project/frontend", "tests/e2e"]
 
 [tool.uv]
 # Hardlinked installs (uv's default) leave site-packages files with st_nlink > 1,
