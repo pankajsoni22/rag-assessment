@@ -8,6 +8,7 @@ from backend.api.dependencies import (
     get_ingestion_service,
     get_rag_orchestrator,
 )
+from backend.clients.errors import RateLimitedError
 from backend.loaders.registry import default_registry
 from backend.main import app
 from backend.services.chunking_service import ChunkingService
@@ -29,6 +30,16 @@ class _FakeEmbeddingClient:
 class _FakeGenerationClient:
     def complete(self, messages: list[dict[str, str]]) -> str:
         return "Fake grounded answer."
+
+
+class _RateLimitedGenerationClient:
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        raise RateLimitedError("quota exceeded")
+
+
+class _BrokenGenerationClient:
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        raise RuntimeError("boom")
 
 
 @pytest.fixture
@@ -105,3 +116,65 @@ def test_ask_scoped_to_known_set_succeeds(client):
     )
 
     assert response.status_code == 200
+
+
+def _client_with_generation_client(generation_client, tmp_path) -> TestClient:
+    vector_store = ChromaVectorStore(persist_dir=tmp_path)
+    doc_set_service = DocumentSetService(vector_store=vector_store)
+    embedder = EmbeddingService(_FakeEmbeddingClient())
+    ingestion_service = IngestionService(
+        loader_registry=default_registry(),
+        chunker=ChunkingService(),
+        embedder=embedder,
+        vector_store=vector_store,
+        doc_set_service=doc_set_service,
+    )
+    orchestrator = RAGOrchestrator(
+        conversation_service=ConversationService(),
+        retrieval_service=RetrievalService(embedder=embedder, vector_store=vector_store),
+        generation_service=GenerationService(generation_client),
+    )
+    app.dependency_overrides[get_document_set_service] = lambda: doc_set_service
+    app.dependency_overrides[get_ingestion_service] = lambda: ingestion_service
+    app.dependency_overrides[get_rag_orchestrator] = lambda: orchestrator
+    test_client = TestClient(app)
+    # Ingest a document so retrieval returns non-empty chunks, forcing
+    # GenerationService to actually call the (broken) client rather than
+    # taking the no-chunks "not found" shortcut.
+    set_id = test_client.post("/sets", json={"name": "Notes"}).json()["id"]
+    test_client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("note.txt", io.BytesIO(b"The answer is 42."), "text/plain")},
+    )
+    return test_client
+
+
+def test_ask_returns_429_when_generation_is_rate_limited(tmp_path):
+    try:
+        test_client = _client_with_generation_client(_RateLimitedGenerationClient(), tmp_path)
+
+        response = test_client.post(
+            "/query", json={"question": "What is the answer?", "set_id": None, "session_id": "s1"}
+        )
+
+        assert response.status_code == 429
+        assert "rate-limited" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_ask_returns_500_with_generic_detail_on_unexpected_failure(tmp_path):
+    try:
+        test_client = _client_with_generation_client(_BrokenGenerationClient(), tmp_path)
+
+        response = test_client.post(
+            "/query", json={"question": "What is the answer?", "set_id": None, "session_id": "s1"}
+        )
+
+        assert response.status_code == 500
+        detail = response.json()["detail"]
+        assert "boom" not in detail
+        assert "RuntimeError" not in detail
+    finally:
+        app.dependency_overrides.clear()

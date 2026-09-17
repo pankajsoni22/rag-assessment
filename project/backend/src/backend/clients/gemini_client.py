@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
+
+from backend.clients.errors import RateLimitedError
 
 # "text-embedding-004" (architecture.md's original placeholder) 404s against
 # the live API - deprecated. Confirmed via client.models.list() (filtered to
@@ -33,6 +36,13 @@ class GeminiEmbeddingClient:
         vectors: list[list[float]] = []
         for start in range(0, len(texts), _BATCH_SIZE):
             batch = texts[start : start + _BATCH_SIZE]
-            response = self._client.models.embed_content(model=_MODEL, contents=batch)
+            try:
+                response = self._client.models.embed_content(model=_MODEL, contents=batch)
+            except genai_errors.APIError as exc:
+                if exc.code == 429:
+                    raise RateLimitedError(
+                        "Gemini embedding rate limit or quota exceeded."
+                    ) from exc
+                raise
             vectors.extend(embedding.values for embedding in response.embeddings)
         return vectors

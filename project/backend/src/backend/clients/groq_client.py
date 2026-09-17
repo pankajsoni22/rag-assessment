@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import groq
 from groq import Groq
+
+from backend.clients.errors import RateLimitedError
 
 # "llama-3.3-70b-versatile" (specs/007's original placeholder) 404s - not
 # available on this account/catalog anymore. Confirmed via client.models.list()
@@ -20,7 +23,10 @@ class GroqClient:
         self._client = Groq(api_key=api_key)
 
     def complete(self, messages: list[dict[str, str]]) -> str:
-        response = self._client.chat.completions.create(
-            model=_MODEL, messages=messages, temperature=_TEMPERATURE
-        )
+        try:
+            response = self._client.chat.completions.create(
+                model=_MODEL, messages=messages, temperature=_TEMPERATURE
+            )
+        except groq.RateLimitError as exc:
+            raise RateLimitedError("Groq generation rate limit or quota exceeded.") from exc
         return response.choices[0].message.content

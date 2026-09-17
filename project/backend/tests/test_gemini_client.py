@@ -1,5 +1,9 @@
 from unittest.mock import MagicMock
 
+import pytest
+from google.genai import errors as genai_errors
+
+from backend.clients.errors import RateLimitedError
 from backend.clients.gemini_client import GeminiEmbeddingClient
 
 
@@ -37,3 +41,25 @@ def test_embed_texts_empty_list_makes_no_calls():
     )
 
     assert client.embed_texts([]) == []
+
+
+def test_embed_texts_raises_rate_limited_error_on_429():
+    client = GeminiEmbeddingClient(api_key="fake")
+    error = genai_errors.ClientError(
+        429, {"error": {"message": "quota exceeded", "status": "RESOURCE_EXHAUSTED"}}
+    )
+    client._client.models.embed_content = MagicMock(side_effect=error)
+
+    with pytest.raises(RateLimitedError):
+        client.embed_texts(["hello"])
+
+
+def test_embed_texts_reraises_non_rate_limit_api_errors():
+    client = GeminiEmbeddingClient(api_key="fake")
+    error = genai_errors.ClientError(
+        404, {"error": {"message": "not found", "status": "NOT_FOUND"}}
+    )
+    client._client.models.embed_content = MagicMock(side_effect=error)
+
+    with pytest.raises(genai_errors.ClientError):
+        client.embed_texts(["hello"])

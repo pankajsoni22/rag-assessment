@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 
 from backend.api.dependencies import get_document_set_service, get_ingestion_service
 from backend.api.schemas import DocumentResponse
+from backend.clients.errors import RateLimitedError
 from backend.loaders.registry import format_from_filename
 from backend.services.document_set_service import (
     DocumentNotFoundError,
@@ -44,6 +45,14 @@ def upload_document(
             raise HTTPException(status_code=404, detail=f"Set not found: {exc}") from exc
         except EmptyDocumentError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+        except RateLimitedError as exc:
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "The embedding service is rate-limited or out of quota right now. "
+                    "Please wait a bit and try again."
+                ),
+            ) from exc
         except Exception as exc:
             # Detail shown to the user stays generic (never leak internals,
             # per B6 privacy) - the real cause is logged here instead.

@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.api.dependencies import get_document_set_service, get_ingestion_service
+from backend.clients.errors import RateLimitedError
 from backend.loaders.registry import default_registry
 from backend.main import app
 from backend.services.chunking_service import ChunkingService
@@ -16,6 +17,11 @@ from storage.chroma_vector_store import ChromaVectorStore
 class _FakeEmbeddingClient:
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
         return [[float(i), 0.0] for i, _ in enumerate(texts)]
+
+
+class _RateLimitedEmbeddingClient:
+    def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        raise RateLimitedError("quota exceeded")
 
 
 @pytest.fixture
@@ -130,6 +136,34 @@ def test_upload_corrupt_pdf_returns_422_without_leaking_internals(client):
     # Plain-language message only — no raw exception class names or stack details.
     assert "PdfStreamError" not in detail
     assert "Traceback" not in detail
+
+
+def test_upload_document_returns_429_when_embedding_is_rate_limited(tmp_path):
+    vector_store = ChromaVectorStore(persist_dir=tmp_path)
+    doc_set_service = DocumentSetService(vector_store=vector_store)
+    ingestion_service = IngestionService(
+        loader_registry=default_registry(),
+        chunker=ChunkingService(),
+        embedder=EmbeddingService(_RateLimitedEmbeddingClient()),
+        vector_store=vector_store,
+        doc_set_service=doc_set_service,
+    )
+    app.dependency_overrides[get_document_set_service] = lambda: doc_set_service
+    app.dependency_overrides[get_ingestion_service] = lambda: ingestion_service
+    try:
+        test_client = TestClient(app)
+        set_id = test_client.post("/sets", json={"name": "Notes"}).json()["id"]
+
+        response = test_client.post(
+            "/documents",
+            params={"set_id": set_id},
+            files={"file": ("note.txt", io.BytesIO(b"hello world"), "text/plain")},
+        )
+
+        assert response.status_code == 429
+        assert "rate-limited" in response.json()["detail"].lower()
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_get_document_unknown_id_returns_404(client):
