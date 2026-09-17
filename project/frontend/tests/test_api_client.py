@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 import httpx
 import pytest
 
-from frontend.api_client import ApiClient
+from frontend.api_client import ApiClient, ApiError
 from frontend.models import CitationView
 
 
@@ -116,14 +116,33 @@ def test_remove_document_calls_delete():
     client.remove_document("d1")
 
 
-def test_raises_on_http_error():
+def test_raises_api_error_with_backend_detail_message():
     def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(404, json={"detail": "not found"})
+        return httpx.Response(422, json={"detail": "'big.pdf' has no readable text content."})
+
+    client = _client_with_handler(handler)
+
+    with pytest.raises(ApiError, match="has no readable text content"):
+        client.delete_set("missing")
+
+
+def test_raises_httpx_error_when_response_has_no_detail_field():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, text="internal server error")
 
     client = _client_with_handler(handler)
 
     with pytest.raises(httpx.HTTPStatusError):
         client.delete_set("missing")
+
+
+def test_success_response_does_not_raise():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(204)
+
+    client = _client_with_handler(handler)
+
+    client.delete_set("s1")  # no exception
 
 
 def test_ask_posts_question_and_parses_grounded_answer():

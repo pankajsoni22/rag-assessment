@@ -9,6 +9,27 @@ from frontend.config import Settings
 from frontend.models import AnswerView, CitationView, DocumentSetView, DocumentView
 
 
+class ApiError(Exception):
+    """Raised for a backend HTTP error, carrying its plain-language `detail`
+    message rather than httpx's generic "Client error '422...' for url '...'"
+    text, which discards the actual reason and is what st.error() would
+    otherwise show the user.
+    """
+
+
+def _raise_for_status(response: httpx.Response) -> None:
+    if response.is_success:
+        return
+    detail = None
+    try:
+        detail = response.json().get("detail")
+    except Exception:
+        pass
+    if detail:
+        raise ApiError(detail) from None
+    response.raise_for_status()
+
+
 class ApiClient:
     def __init__(self, base_url: str) -> None:
         # httpx's default timeout (5s total) is far too short for
@@ -19,22 +40,22 @@ class ApiClient:
 
     def create_set(self, name: str) -> DocumentSetView:
         response = self._client.post("/sets", json={"name": name})
-        response.raise_for_status()
+        _raise_for_status(response)
         return self._parse_set(response.json())
 
     def list_sets(self) -> list[DocumentSetView]:
         response = self._client.get("/sets")
-        response.raise_for_status()
+        _raise_for_status(response)
         return [self._parse_set(item) for item in response.json()]
 
     def delete_set(self, set_id: str) -> None:
         response = self._client.delete(f"/sets/{set_id}")
-        response.raise_for_status()
+        _raise_for_status(response)
 
     def list_documents(self, set_id: str | None = None) -> list[DocumentView]:
         params = {"set_id": set_id} if set_id else {}
         response = self._client.get("/documents", params=params)
-        response.raise_for_status()
+        _raise_for_status(response)
         return [self._parse_document(item) for item in response.json()]
 
     def upload_document(self, set_id: str, filename: str, content: bytes) -> DocumentView:
@@ -43,18 +64,18 @@ class ApiClient:
             params={"set_id": set_id},
             files={"file": (filename, content)},
         )
-        response.raise_for_status()
+        _raise_for_status(response)
         return self._parse_document(response.json())
 
     def remove_document(self, document_id: str) -> None:
         response = self._client.delete(f"/documents/{document_id}")
-        response.raise_for_status()
+        _raise_for_status(response)
 
     def ask(self, question: str, set_id: str | None, session_id: str) -> AnswerView:
         response = self._client.post(
             "/query", json={"question": question, "set_id": set_id, "session_id": session_id}
         )
-        response.raise_for_status()
+        _raise_for_status(response)
         data = response.json()
         return AnswerView(
             answer=data["answer"],
