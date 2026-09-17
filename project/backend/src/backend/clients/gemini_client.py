@@ -14,8 +14,14 @@ _MODEL = "gemini-embedding-001"
 # Gemini's embed_content endpoint accepts a batch, but a full document's
 # worth of chunks in one request risks exceeding request size/rate limits
 # and makes any single failure lose all prior work in that call. Batching
-# keeps each request small and lets earlier batches succeed independently.
-_BATCH_SIZE = 20
+# keeps each request bounded and lets earlier batches succeed independently.
+# 100 is confirmed working against the live API (verified directly, not
+# just assumed) and is the documented max for this endpoint - fewer,
+# larger batches mean fewer round-trips, which matters more than per-call
+# delay for a large document: free-tier limits are typically requests-per-
+# minute, so the real lever for "will a 10MB+ document get through" is
+# how many separate calls it needs, not how long any single call waits.
+_BATCH_SIZE = 100
 # The SDK's own default is short relative to a real embedding call under
 # normal internet latency; matches the generous client-side timeout the
 # frontend now uses for the same reason.
@@ -24,10 +30,11 @@ _TIMEOUT_MS = 120_000
 # when retry_options is explicitly set - left as None (the default), it
 # resolves to zero retries (stop_after_attempt(1)), which is exactly why a
 # transient 429/503 was previously failing immediately instead of backing
-# off and retrying. max_delay capped below the SDK's own 60s default so a
-# multi-batch upload's worst-case total retry time stays well inside the
-# frontend's 180s request timeout even if several batches each retry once.
-_RETRY_OPTIONS = types.HttpRetryOptions(attempts=4, initial_delay=1.0, max_delay=20.0)
+# off and retrying. attempts=6/max_delay=45 gives each batch up to ~90s of
+# total backoff (1+2+4+8+16+32+45s-ish with jitter) - enough to ride out a
+# full per-minute rate-limit window, which a short retry budget cannot.
+# Still bounded well inside the frontend's now-300s request timeout.
+_RETRY_OPTIONS = types.HttpRetryOptions(attempts=6, initial_delay=1.0, max_delay=45.0)
 
 
 class GeminiEmbeddingClient:

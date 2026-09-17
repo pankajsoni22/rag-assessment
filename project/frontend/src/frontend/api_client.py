@@ -35,8 +35,11 @@ class ApiClient:
         # httpx's default timeout (5s total) is far too short for
         # upload_document/ask, which trigger real Gemini/Groq API calls on
         # the backend that can legitimately take well over that for a real
-        # multi-chunk document. Generous timeout applies to every call.
-        self._client = httpx.Client(base_url=base_url, timeout=180.0)
+        # multi-chunk document - especially now that a rate-limited/
+        # overloaded batch can back off for up to ~90s before giving up
+        # (see backend/clients/gemini_client.py). Generous timeout applies
+        # to every call.
+        self._client = httpx.Client(base_url=base_url, timeout=300.0)
 
     def create_set(self, name: str) -> DocumentSetView:
         response = self._client.post("/sets", json={"name": name})

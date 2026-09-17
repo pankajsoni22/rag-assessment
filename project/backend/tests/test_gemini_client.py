@@ -28,7 +28,7 @@ def test_client_has_retry_backoff_with_jitter_configured():
 
 def test_embed_texts_splits_into_batches_and_preserves_order():
     client = GeminiEmbeddingClient(api_key="fake")
-    texts = [f"text-{i}" for i in range(45)]  # 3 batches at _BATCH_SIZE=20
+    texts = [f"text-{i}" for i in range(220)]  # 3 batches at _BATCH_SIZE=100
 
     calls: list[list[str]] = []
 
@@ -41,7 +41,7 @@ def test_embed_texts_splits_into_batches_and_preserves_order():
     vectors = client.embed_texts(texts)
 
     assert len(calls) == 3
-    assert [len(batch) for batch in calls] == [20, 20, 5]
+    assert [len(batch) for batch in calls] == [100, 100, 20]
     assert calls[0] + calls[1] + calls[2] == texts
     assert len(vectors) == len(texts)
     assert vectors[0] == [float(len(texts[0])), 0.0]
