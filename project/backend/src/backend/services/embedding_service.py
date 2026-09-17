@@ -17,3 +17,7 @@ class EmbeddingService:
         if not chunks:
             return []
         return self._client.embed_texts([chunk.text for chunk in chunks])
+
+    def embed_query(self, text: str) -> list[float]:
+        [vector] = self._client.embed_texts([text])
+        return vector

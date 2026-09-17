@@ -1,6 +1,8 @@
-# Phase 5: Backend — Retrieval & Generation Services (Plan)
+# Phase 5: Backend — Retrieval & Generation Services
 
-Plan for Phase 5 of `specs/002-master-development-plan.md`: the Retrieval Service and Generation Service, built independently of each other. **Not yet implemented** — this document describes the intended design for review before any code is written.
+Plan and record for Phase 5 of `specs/002-master-development-plan.md`: the Retrieval Service and Generation Service, built independently of each other.
+
+**Status: implemented as described below.** `uv run --package rag-backend pytest` — 46 passed (up from 39 after Phase 4), including `test_retrieval_service.py` and `test_generation_service.py`. `GroqClient` itself remains unverified against the live API per the stated stance — needs a real `GROQ_API_KEY` for manual verification.
 
 ## Decisions (confirmed with the user)
 

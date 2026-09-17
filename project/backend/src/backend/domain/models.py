@@ -42,3 +42,38 @@ class Document:
     format: DocumentFormat
     status: IngestionStatus
     uploaded_at: datetime
+
+
+@dataclass(frozen=True)
+class RetrievedChunk:
+    chunk_id: str
+    document_id: str
+    text: str
+    metadata: dict[str, str]
+    distance: float
+
+
+class Role(str, Enum):
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+@dataclass(frozen=True)
+class ConversationTurn:
+    role: Role
+    content: str
+    timestamp: datetime
+
+
+@dataclass(frozen=True)
+class Citation:
+    document_id: str
+    filename: str
+    chunk_id: str
+
+
+@dataclass(frozen=True)
+class AnswerResult:
+    answer: str
+    citations: list[Citation]
+    grounded: bool
