@@ -1,10 +1,20 @@
 # Architecture
 
-This document is the working model of the application: module boundaries,
-how they interact, and why they're split the way they are. See
+This document is the **central architecture document** — the working model
+of the application and the entry point for understanding how it's
+designed: module boundaries, how they interact, and why they're split the
+way they are. See
 [`tech-stack.md`](tech-stack.md) for technology choices and rationale, and
 [`../specs/001-rag-generator-requirements.md`](../specs/001-rag-generator-requirements.md)
 for the requirements this design satisfies.
+
+Deeper design documents that drill into a single tier or concern live
+alongside this file and are referenced from here rather than folded in
+directly, so this document stays a readable overview:
+
+- [`backend-low-level-design.md`](backend-low-level-design.md) — class-level
+  design for the backend tier (UML class diagrams), building on the module
+  boundaries below. Expected to evolve as implementation proceeds.
 
 ## Guiding Principles
 
