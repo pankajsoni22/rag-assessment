@@ -82,4 +82,4 @@ Verify both vertical slices (ingestion and question-answering) end-to-end throug
 
 ## Next Steps
 
-Before starting Phase 1, create `specs/003-project-scaffolding-and-environment-setup.md` with the technical plan for that phase. Each subsequent phase gets its own spec file in the same way, numbered sequentially, immediately before that phase's work begins.
+Before starting Phase 1, create `specs/003-phase-1-project-scaffolding-and-environment-setup.md` with the technical plan for that phase. Each subsequent phase gets its own spec file in the same way, numbered sequentially with a `phase-<n>-` tag, immediately before that phase's work begins.

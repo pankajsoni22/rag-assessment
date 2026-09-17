@@ -2,7 +2,7 @@
 
 Plan for Phase 6 of `specs/002-master-development-plan.md`: the Conversation Service, the RAG Orchestrator tying Conversation/Retrieval/Generation together, and the FastAPI query endpoint. Completes the question-answering vertical slice end-to-end. **Not yet implemented** — this document describes the intended design for review before any code is written.
 
-This design builds directly on `architecture/backend-low-level-design.md` and the (also not-yet-implemented) Phase 5 plan, `specs/007-retrieval-and-generation-services.md`, which already defines the domain types (`RetrievedChunk`, `ConversationTurn`, `Role`, `Citation`, `AnswerResult`) and the `RetrievalService`/`GenerationService` signatures this phase's `RAGOrchestrator` will call.
+This design builds directly on `architecture/backend-low-level-design.md` and the (also not-yet-implemented) Phase 5 plan, `specs/007-phase-5-retrieval-and-generation-services.md`, which already defines the domain types (`RetrievedChunk`, `ConversationTurn`, `Role`, `Citation`, `AnswerResult`) and the `RetrievalService`/`GenerationService` signatures this phase's `RAGOrchestrator` will call.
 
 ## Domain Model
 
