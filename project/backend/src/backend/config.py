@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     groq_api_key: str
     google_api_key: str
     chroma_persist_dir: str
+    # Empty (the default) means embedded mode: Chroma runs as a local
+    # library inside this process, persisting to chroma_persist_dir. Set
+    # only when Chroma runs as its own server (e.g. via docker/), in which
+    # case the backend connects over HTTP instead - see api/dependencies.py.
+    chroma_host: str = ""
+    chroma_port: int = 8000
 
     model_config = SettingsConfigDict(
         env_file=_REPO_ROOT / ".env",

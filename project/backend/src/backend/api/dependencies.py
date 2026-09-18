@@ -15,6 +15,7 @@ from backend.services.generation_service import GenerationService
 from backend.services.ingestion_service import IngestionService
 from backend.services.rag_orchestrator import RAGOrchestrator
 from backend.services.retrieval_service import RetrievalService
+from storage.chroma_http_vector_store import ChromaHttpVectorStore
 from storage.chroma_vector_store import ChromaVectorStore
 
 # Every provider below is lazy (only runs when a request actually depends on
@@ -30,7 +31,10 @@ def get_settings() -> Settings:
 
 @lru_cache
 def get_vector_store() -> VectorStore:
-    return ChromaVectorStore(persist_dir=get_settings().chroma_persist_dir)
+    settings = get_settings()
+    if settings.chroma_host:
+        return ChromaHttpVectorStore(host=settings.chroma_host, port=settings.chroma_port)
+    return ChromaVectorStore(persist_dir=settings.chroma_persist_dir)
 
 
 @lru_cache
