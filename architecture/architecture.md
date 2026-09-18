@@ -70,8 +70,19 @@ directly, so this document stays a readable overview:
 
 - A `VectorStore` interface is the only thing the backend depends on for
   persistence (`upsert(chunks, vectors, metadata)`, `query(vector, filter)`,
-  `delete(document_id)`, etc.). Today it has one implementation, backed by
-  Chroma.
+  `delete(document_id)`, etc.). It has two implementations, both backed by
+  Chroma, selected at startup by config (`backend/api/dependencies.py`):
+  - `ChromaVectorStore` — Chroma embedded as a local library
+    (`PersistentClient`), used for local (non-Docker) development.
+  - `ChromaHttpVectorStore` — Chroma running as its own server, reached
+    over HTTP (`HttpClient`), used in the Docker Compose deployment (see
+    [`../docker/`](../docker/) and
+    [`../specs/012-containerization.md`](../specs/012-containerization.md)).
+  Both share their upsert/query/delete logic
+  (`storage/_chroma_collection.py`) and differ only in how they obtain a
+  `chromadb` client — this is the "swapped or split into its own service
+  later" case the `VectorStore` interface was deliberately designed for
+  (see *Design Patterns* below), now exercised for real.
 - Document and set bookkeeping is **not** a separate database. Every chunk
   written to Chroma carries metadata: `document_id`, `set_id`, `filename`,
   `format`, `uploaded_at`. Listing "documents in a set" or "all sets" is a
@@ -232,6 +243,53 @@ sequenceDiagram
     API-->>FE: response
     FE-->>User: shows answer + sources
 ```
+
+---
+
+## Deployment (Docker Compose)
+
+Three containers, defined in [`../docker/docker-compose.yml`](../docker/docker-compose.yml):
+
+```mermaid
+graph LR
+    subgraph Host["Host machine"]
+        direction LR
+        User((User)) -->|":8501"| FE
+        User -.->|":8000 (API/docs)"| BE
+    end
+
+    subgraph Compose["Docker Compose network"]
+        FE["frontend<br/>Streamlit :8501"]
+        BE["backend<br/>FastAPI :8000"]
+        CH["chroma<br/>Chroma server :8000"]
+        FE -->|"HTTP"| BE
+        BE -->|"HTTP"| CH
+    end
+
+    CH --> VOL[("chroma-data<br/>named volume")]
+```
+
+- `frontend` and `backend` are each built from this repo (`docker/frontend/Dockerfile`,
+  `docker/backend/Dockerfile`); `chroma` uses the official `chromadb/chroma`
+  image unmodified.
+- Only `frontend` (8501) and `backend` (8000) publish ports to the host;
+  `chroma` is reachable only from other containers on the compose network —
+  nothing outside the deployment talks to it directly, preserving "Frontend
+  never touches Chroma... directly" from the Guiding Principles above one
+  layer further down.
+- Secrets (`GROQ_API_KEY`, `GOOGLE_API_KEY`) still come from the repo-root
+  `.env` (via each service's `env_file:`), never baked into an image layer.
+  `BACKEND_URL` and `CHROMA_HOST`/`CHROMA_PORT` are overridden per-container
+  in the compose file itself, since those need container-network addresses
+  (`http://backend:8000`, `chroma`) rather than the localhost addresses
+  `.env` uses for local (non-Docker) development.
+- Local (non-Docker) development is unchanged: `CHROMA_HOST` defaults to
+  empty, which keeps the backend on the embedded `ChromaVectorStore` exactly
+  as before Docker existed. See *Storage Tier* above.
+
+See [`../specs/012-containerization.md`](../specs/012-containerization.md) for
+the full record of this decision, including why Chroma was split into its
+own container instead of staying embedded.
 
 ---
 

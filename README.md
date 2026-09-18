@@ -19,10 +19,33 @@ Python + FastAPI backend, LlamaIndex orchestration, Google Gemini embeddings, Gr
    - `GROQ_API_KEY` — get one at https://console.groq.com/keys
    - `GOOGLE_API_KEY` — get one at https://aistudio.google.com/apikey
    - `CHROMA_PERSIST_DIR` — local directory Chroma persists to; the default value in `.env.example` works as-is.
-   - `BACKEND_URL` — used by the frontend; the default (`http://127.0.0.1:8000`) works as-is for local development.
+   - `CHROMA_HOST` / `CHROMA_PORT`, `BACKEND_URL` — leave these as the `.env.example` defaults for direct `uv run` use (Option B below). Docker Compose overrides them itself for container-to-container addressing — you don't need to change `.env` to use Docker.
 3. `.env` is gitignored — never commit it.
 
 ## Running the Application
+
+### Option A: Docker Compose (recommended)
+Runs all three containers (frontend, backend, and Chroma as its own
+service) with one command — see
+[`architecture/architecture.md`](architecture/architecture.md)'s
+*Deployment* section and [`specs/012-containerization.md`](specs/012-containerization.md)
+for why Chroma gets its own container.
+
+Prerequisite: Docker with the Compose plugin (`docker compose version`).
+
+```sh
+cd docker
+docker compose up --build
+```
+
+- Frontend: http://localhost:8501
+- Backend: http://localhost:8000 (docs at `/docs`, health at `/health`)
+- Chroma isn't exposed to the host — only the backend container talks to it.
+
+`docker compose down` stops everything; add `-v` to also delete the
+`chroma-data` volume (wipes all uploaded documents).
+
+### Option B: Run each tier directly with uv
 From the repo root:
 
 ```sh
@@ -37,13 +60,15 @@ uv run --package rag-frontend streamlit run project/frontend/src/frontend/app.py
 
 Open the frontend URL Streamlit prints (typically `http://localhost:8501`). "Sets & Documents" lets you create a set and upload PDF/Word/text/Markdown files; "Chat" lets you ask questions, optionally scoped to one set, with grounded answers and citations.
 
-**Use small files.** Both external APIs are free-tier and rate-limited (see `architecture/tech-stack.md`) — a large document produces many chunks, and each chunk needs its own embedding call, so big or scanned documents commonly hit a rate limit or fail with "no readable text content" before finishing. Prefer small, text-based PDFs or plain text files. There's a UI-level upload size sanity limit (`.streamlit/config.toml`) — not a guarantee that any file under it will process cleanly on the free tier.
+**Use small files.** Both external APIs are free-tier and rate-limited (see `architecture/tech-stack.md`) — a large document produces many chunks, and each chunk needs its own embedding call, so big or scanned documents commonly hit a rate limit or fail with "no readable text content" before finishing. Prefer small, text-based PDFs or plain text files (see `data/` for ready-made samples in every supported format). There's a UI-level upload size sanity limit (`.streamlit/config.toml`) — not a guarantee that any file under it will process cleanly on the free tier.
 
 ## Project Structure
 - `project/backend/` — FastAPI app and RAG pipeline (`rag-backend` package)
 - `project/storage/` — Chroma persistence (`rag-storage` package)
 - `project/frontend/` — Streamlit UI (`rag-frontend` package)
 - `tests/e2e/` — cross-tier Playwright end-to-end tests (`rag-e2e`, not installed as an application tier)
+- `docker/` — Dockerfiles per tier and the Compose file (see *Running the Application* above)
+- `data/` — small sample documents (one per supported format) for manual upload testing
 - `architecture/` — architecture and tech-stack documentation
 - `specs/` — planning documents, one per feature/phase
 
