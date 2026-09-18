@@ -1,0 +1,23 @@
+# Docker's classic builder and BuildKit both look for .dockerignore at the
+# root of the build context - which is the repo root here (see
+# docker/docker-compose.yml's `context: ..`), not inside docker/ itself.
+# This keeps `COPY project ./project` / `COPY tests ./tests` in the
+# Dockerfiles from picking up local dev cruft, and keeps secrets out of the
+# build context entirely.
+
+.git/
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+project/storage/.chroma_data/
+
+.env
+.env.*
+!.env.example
+
+data/
+project_transcripts/
+architecture/
+specs/
+docker/
