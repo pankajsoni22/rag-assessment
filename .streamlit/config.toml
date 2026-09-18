@@ -1,8 +1,28 @@
-# Streamlit's default (200MB) is misleading for this app: it advertises a
-# limit far beyond what actually works. Both external APIs are free-tier and
-# rate-limited (see architecture/tech-stack.md), and a large document
-# produces many chunks -> many embedding calls -> a near-certain rate limit
-# before ingestion finishes. 10MB comfortably covers small-to-medium real
-# PDFs/text files while keeping the advertised limit honest.
+# Streamlit's default upload limit (200MB) is misleading for this app: it
+# advertises a limit far beyond what actually works. Both external APIs are
+# free-tier and rate-limited (see architecture/tech-stack.md), and a large
+# document produces many chunks -> many embedding calls -> a near-certain
+# rate limit before ingestion finishes. 10MB comfortably covers small-to-medium
+# real PDFs/text files while keeping the advertised limit honest.
 [server]
 maxUploadSize = 10
+
+[browser]
+gatherUsageStats = false
+
+# Look & feel. Fine-grained styling that the theme keys can't express lives in
+# frontend/ui.py; keep colours here so the two stay in sync.
+[theme]
+base = "light"
+primaryColor = "#4F46E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F5F6FB"
+textColor = "#1E1B4B"
+linkColor = "#4338CA"
+borderColor = "#E5E7EF"
+baseRadius = "large"
+font = "sans-serif"
+
+[theme.sidebar]
+backgroundColor = "#F5F6FB"
+secondaryBackgroundColor = "#FFFFFF"

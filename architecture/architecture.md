@@ -102,8 +102,10 @@ directly, so this document stays a readable overview:
 | Module | Responsibility |
 |---|---|
 | **API Client** | The only module that speaks HTTP to the backend. Every other frontend module goes through it — nothing else knows the backend's URL or request/response shapes. |
+| **Landing Page (UI)** | Default page (`/`): hero, "How it works" steps and a "Start With RAG Assessment Project" call to action that navigates to the Set & Document Manager. Sidebar is hidden here; the sidebar only carries branding and navigation. |
 | **Set & Document Manager (UI)** | Create/select sets, upload documents, show status, remove documents. |
-| **Chat (UI)** | Set selector (optional — default is "search everything," per spec A2.8), message history, question input, answer + citations display, explicit "not found in documents" state. |
+| **Chat (UI)** | Set selector (optional — default is "search everything," per spec A2.8), message history, question input, suggested starter questions, "New chat" (clears the transcript and rotates the session id), answer + citation badges, explicit "not found in documents" state. |
+| **UI Kit (`ui.py`)** | Presentation only: global stylesheet, page header and empty-state components. No API calls or state. Colours live in `.streamlit/config.toml` (`[theme]`); `ui.py` holds only styling the theme keys can't express. |
 | **Session State** | Streamlit's own session state, holding the current session id and set selection — not conversation history itself, which the backend owns. |
 
 ## Design Patterns in Use

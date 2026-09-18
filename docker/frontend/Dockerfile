@@ -7,6 +7,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.15 /uv /uvx /usr/local/bin/
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
+COPY .streamlit ./.streamlit
 COPY project ./project
 COPY tests ./tests
 

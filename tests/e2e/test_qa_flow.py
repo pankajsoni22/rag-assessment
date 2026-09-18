@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 def test_qa_flow_returns_grounded_answer_with_citations(page: Page, frontend_url: str):
     set_name = f"E2E QA Set {uuid.uuid4().hex[:8]}"
 
-    page.goto(frontend_url)
+    page.goto(f"{frontend_url}/sets")
     page.get_by_role("textbox", name="New set name").fill(set_name)
     page.get_by_role("button", name="Create set").click()
 

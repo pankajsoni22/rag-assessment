@@ -8,7 +8,7 @@ from playwright.sync_api import Page, expect
 def test_upload_flow_creates_set_and_shows_ready_document(page: Page, frontend_url: str):
     set_name = f"E2E Set {uuid.uuid4().hex[:8]}"
 
-    page.goto(frontend_url)
+    page.goto(f"{frontend_url}/sets")
     expect(page.get_by_role("heading", name="Sets & Documents")).to_be_visible()
 
     page.get_by_role("textbox", name="New set name").fill(set_name)
@@ -38,7 +38,7 @@ def test_upload_flow_creates_set_and_shows_ready_document(page: Page, frontend_u
 def test_remove_document_removes_it_from_the_list(page: Page, frontend_url: str):
     set_name = f"E2E Removal Set {uuid.uuid4().hex[:8]}"
 
-    page.goto(frontend_url)
+    page.goto(f"{frontend_url}/sets")
     page.get_by_role("textbox", name="New set name").fill(set_name)
     page.get_by_role("button", name="Create set").click()
 

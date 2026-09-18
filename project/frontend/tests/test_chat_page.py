@@ -90,3 +90,54 @@ def test_chat_scope_selector_is_independent_of_set_manager_selection():
     assert not at.exception
     assert at.session_state.get("chat_set_id") is None
     assert at.selectbox[0].value is None
+
+
+def test_suggestions_shown_only_when_conversation_is_empty():
+    document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
+    fake_client = _FakeApiClient(sets=[document_set])
+    with patch("frontend.api_client.get_api_client", return_value=fake_client):
+        at = AppTest.from_file(_PAGE)
+        at.run()
+        assert any(b.key and b.key.startswith("suggest-") for b in at.button)
+
+        at.chat_input[0].set_value("What is X?").run()
+
+    assert not at.exception
+    assert not any(b.key and b.key.startswith("suggest-") for b in at.button)
+
+
+def test_clicking_a_suggestion_asks_it_as_a_question():
+    document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
+    fake_client = _FakeApiClient(sets=[document_set])
+    with patch("frontend.api_client.get_api_client", return_value=fake_client):
+        at = AppTest.from_file(_PAGE)
+        at.run()
+        suggestion = next(b for b in at.button if b.key and b.key.startswith("suggest-"))
+        suggestion.click().run()
+
+    assert not at.exception
+    assert fake_client.received_ask_args is not None
+    assert fake_client.received_ask_args[0] == "Summarize the key points of these documents"
+
+
+def test_new_chat_clears_messages_and_rotates_session_id():
+    fake_client = _FakeApiClient()
+    with patch("frontend.api_client.get_api_client", return_value=fake_client):
+        at = AppTest.from_file(_PAGE)
+        at.run()
+        at.chat_input[0].set_value("What is X?").run()
+        old_session_id = at.session_state["session_id"]
+        assert len(at.session_state["messages"]) == 2
+
+        next(b for b in at.button if b.label == "New chat").click().run()
+
+    assert not at.exception
+    assert at.session_state["messages"] == []
+    assert at.session_state["session_id"] != old_session_id
+
+
+def test_no_sets_shows_empty_state():
+    at = _run_with_client(_FakeApiClient(sets=[]))
+
+    assert not at.exception
+    assert any("No document sets yet" in m.value for m in at.markdown)

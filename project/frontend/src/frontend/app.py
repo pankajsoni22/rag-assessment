@@ -1,20 +1,21 @@
 import streamlit as st
 
-st.set_page_config(page_title="RAG Assistant")
+from frontend.ui import LOGO_PATH, apply_theme
 
-st.sidebar.markdown(
-    "**How it works**\n\n"
-    "1. Create a Set\n"
-    "2. Select a Set\n"
-    "3. Upload Document(s) to it\n"
-    "4. Ask a question about the Set in Chat"
-)
-st.sidebar.divider()
+st.set_page_config(page_title="RAG Assessment", page_icon="📚", layout="wide")
+st.logo(str(LOGO_PATH), size="large")
+apply_theme()
 
 pg = st.navigation(
     [
-        st.Page("pages/set_manager.py", title="Sets & Documents", default=True),
-        st.Page("pages/chat.py", title="Chat"),
+        st.Page("pages/home.py", title="Home", icon=":material/home:", url_path="", default=True),
+        st.Page(
+            "pages/set_manager.py",
+            title="Sets & Documents",
+            icon=":material/folder_open:",
+            url_path="sets",
+        ),
+        st.Page("pages/chat.py", title="Chat", icon=":material/chat:", url_path="chat"),
     ]
 )
 pg.run()

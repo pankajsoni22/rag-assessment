@@ -37,3 +37,9 @@ def get_messages() -> list[ChatMessageView]:
 
 def append_message(message: ChatMessageView) -> None:
     get_messages().append(message)
+
+
+def reset_conversation() -> None:
+    """Drop the transcript and rotate the session id so backend memory resets too."""
+    st.session_state.messages = []
+    st.session_state.session_id = str(uuid.uuid4())

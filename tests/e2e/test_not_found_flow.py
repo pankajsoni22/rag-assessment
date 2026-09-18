@@ -14,7 +14,7 @@ def test_question_with_no_ingested_documents_shows_not_found_state(page: Page, f
     # regardless of what else has been ingested in this session.
     set_name = f"E2E Empty Set {uuid.uuid4().hex[:8]}"
 
-    page.goto(frontend_url)
+    page.goto(f"{frontend_url}/sets")
     page.get_by_role("textbox", name="New set name").fill(set_name)
     page.get_by_role("button", name="Create set").click()
 

@@ -4,30 +4,31 @@ import streamlit as st
 
 from frontend.api_client import get_api_client
 from frontend.session_state import get_selected_set_id, set_selected_set_id
+from frontend.ui import empty_state, page_header
 
 _STATUS_BADGE = {
-    "ready": "🟢 Ready",
-    "processing": "🟡 Processing",
-    "error": "🔴 Error",
+    "ready": ":green-badge[:material/check_circle: Ready]",
+    "processing": ":orange-badge[:material/hourglass_top: Processing]",
+    "error": ":red-badge[:material/error: Error]",
 }
 
-st.title("Sets & Documents")
-st.caption(
+page_header(
+    "Sets & Documents",
     "Create a set, then upload documents to it. Once a document shows "
-    "**ready**, you can ask questions about it on the Chat page."
+    "<b>ready</b>, you can ask questions about it in Chat.",
 )
 st.info(
-    "📄 **Use small files.** This app runs on free-tier Gemini/Groq APIs with "
+    "**Use small files.** This app runs on free-tier Gemini/Groq APIs with "
     "strict rate limits — a small PDF or plain text file (a few pages) is far "
     "more likely to process successfully than a large or scanned document.",
-    icon="ℹ️",
+    icon=":material/info:",
 )
 
 api_client = get_api_client()
 
 with st.container(border=True):
     st.subheader(
-        "🗂️ Step 1 · Create or choose a set",
+        ":material/folder_open: Step 1 · Create or choose a set",
         help="A set groups related documents so you can scope your questions to just that group later, in Chat.",
     )
 
@@ -59,7 +60,7 @@ with st.container(border=True):
         sets = []
 
     if not sets:
-        st.info("No sets yet. Create one above to get started.")
+        empty_state("🗂️", "No sets yet", "Create your first set above to get started.")
     else:
         set_names = {s.id: s.name for s in sets}
         options = list(set_names.keys())
@@ -103,7 +104,7 @@ if sets:
     st.write("")  # breathing room between the two sections
 
     with st.container(border=True):
-        st.subheader(f"📄 Step 2 · Upload documents to '{set_names[chosen_id]}'")
+        st.subheader(f":material/upload_file: Step 2 · Upload documents to '{set_names[chosen_id]}'")
 
         if "uploader_key" not in st.session_state:
             st.session_state.uploader_key = 0
@@ -157,9 +158,9 @@ if sets:
         st.divider()
 
         st.caption(
-            "🟢 Ready — available for questions in Chat &nbsp;·&nbsp; "
-            "🟡 Processing — being read and indexed &nbsp;·&nbsp; "
-            "🔴 Error — couldn't be processed (see the message shown at upload time)"
+            "**Ready** — available for questions in Chat &nbsp;·&nbsp; "
+            "**Processing** — being read and indexed &nbsp;·&nbsp; "
+            "**Error** — couldn't be processed (see the message shown at upload time)"
         )
 
         try:
@@ -169,11 +170,11 @@ if sets:
             documents = []
 
         if not documents:
-            st.info("No documents in this set yet — upload one above.")
+            empty_state("📄", "No documents in this set yet", "Upload one above to get started.")
         else:
             for document in documents:
                 name_col, format_col, status_col, action_col = st.columns([3, 1, 1.2, 1])
-                name_col.write(f"📎 {document.filename}")
+                name_col.write(f":material/description: {document.filename}")
                 format_col.write(document.format)
                 status_col.write(_STATUS_BADGE.get(document.status, document.status))
                 if action_col.button(

@@ -38,7 +38,7 @@ cd docker
 docker compose up --build
 ```
 
-- Frontend: http://localhost:8501
+- Frontend: http://localhost:8501 (opens on a landing page — click **Start With RAG Assessment Project**)
 - Backend: http://localhost:8000 (docs at `/docs`, health at `/health`)
 - Chroma isn't exposed to the host — only the backend container talks to it.
 

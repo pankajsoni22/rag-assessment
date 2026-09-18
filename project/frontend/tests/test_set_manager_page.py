@@ -55,11 +55,11 @@ def _run_with_client(fake_client) -> AppTest:
     return at
 
 
-def test_no_sets_shows_info_message():
+def test_no_sets_shows_empty_state():
     at = _run_with_client(_FakeApiClient(sets=[]))
 
     assert not at.exception
-    assert any("No sets yet" in info.value for info in at.info)
+    assert any("No sets yet" in m.value for m in at.markdown)
 
 
 def test_existing_set_is_selectable_and_shows_documents():
