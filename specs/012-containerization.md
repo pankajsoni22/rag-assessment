@@ -105,3 +105,7 @@ Then open `http://localhost:8501` and confirm upload → chat works, and
 this has run yet, expect the first real run to surface something minor —
 most likely around the compose healthcheck timing or the uv workspace
 copy step — worth a quick pass before treating this as done.
+
+## Additions (added 2026-09-18)
+
+`docker/rag.sh` (up/down/restart/status/logs), health checks on all three services and restart policies are described in `specs/014`. **Persistence caveat:** the `chroma-data` volume keeps vectors across `down`/`up`, but the set/document registry is in backend memory, so the UI starts empty after a restart (see `ABOUT.md` §5.1).

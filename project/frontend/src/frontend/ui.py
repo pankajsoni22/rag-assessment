@@ -54,6 +54,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 }
 .stButton > button:hover { transform: translateY(-1px); }
 
+/* File uploader: Streamlit prints "<limit> per file • <types>" inside the dropzone.
+   We deliberately don't advertise a size - the page says "small files" instead
+   (supported types are listed in our own caption). */
+[data-testid="stFileUploaderDropzoneInstructions"] { display: none; }
+
 /* Chat */
 [data-testid="stChatMessage"] { border-radius: 1rem; padding: 1rem 1.1rem; }
 [data-testid="stChatInput"] { border-radius: 1rem; }

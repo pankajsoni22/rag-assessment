@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
@@ -185,3 +186,13 @@ def test_remove_document_calls_api_client():
         remove_button.click().run()
 
     assert fake_client.removed_document_ids == ["d1"]
+
+
+def test_ui_never_states_a_file_size_limit():
+    document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
+    at = _run_with_client(_FakeApiClient(sets=[document_set]))
+
+    assert not at.exception
+    texts = [e.value for e in (*at.markdown, *at.caption, *at.info, *at.warning)]
+    assert any("small files" in t.lower() for t in texts)
+    assert not any(re.search(r"\d\s*(mb|kb|gb)\b", t, re.IGNORECASE) for t in texts)

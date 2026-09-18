@@ -5,6 +5,9 @@ A Retrieval-Augmented Generation (RAG) application, built as a modular monolith 
 ## Status
 All 9 phases of `specs/002-master-development-plan.md` are implemented: document ingestion (PDF/Word/text/Markdown), sets, multi-turn Q&A with citations, and a Streamlit UI for both. See `specs/003`–`011` for what each phase built.
 
+## About & Assumptions
+See [`ABOUT.md`](ABOUT.md) for the assumptions this application deliberately makes (scope, technology, data handling, defaults), its known limitations, and open questions.
+
 ## Tech Stack (summary)
 Python + FastAPI backend, LlamaIndex orchestration, Google Gemini embeddings, Groq LLM, Chroma vector store, Streamlit frontend. All model calls go through free-tier cloud APIs — no local model inference. Full details in [`architecture/tech-stack.md`](architecture/tech-stack.md).
 
@@ -61,8 +64,8 @@ option.
 | Command | What it does |
 |---|---|
 | `./docker/rag.sh up` | Builds images if needed, starts all containers, waits until they're healthy, prints the URLs. Checks Docker is available and that `.env` exists with both API keys filled in (creating `.env` from `.env.example` if it's missing) — and tells you exactly what to fix if not. |
-| `./docker/rag.sh down` | Stops and removes the containers. **Uploaded documents are kept** in the `chroma-data` volume and reappear on the next `up`. |
-| `./docker/rag.sh down --purge` | Same, but also deletes the volume — **all uploaded documents and their index**. Asks you to type `yes` first. |
+| `./docker/rag.sh down` | Stops and removes the containers. **Sets and the document list are held in backend memory, so they are empty after the next `up`** — you re-create sets and re-upload. Old vectors stay in the `chroma-data` volume (see *Known limitation* below). |
+| `./docker/rag.sh down --purge` | Same, but also deletes the volume — **every stored document vector**. Asks you to type `yes` first. Use this for a genuinely clean slate. |
 | `./docker/rag.sh restart` | `down` then `up`. |
 | `./docker/rag.sh status` | Shows container state and health. |
 | `./docker/rag.sh logs [service]` | Follows logs; `service` is `frontend`, `backend` or `chroma` (default: all). |
@@ -75,6 +78,8 @@ again — it rebuilds. After changing `.env`, run `./docker/rag.sh restart`.
 The script is a thin wrapper; the equivalent raw commands are
 `docker compose -f docker/docker-compose.yml up --build -d --wait` and
 `docker compose -f docker/docker-compose.yml down`.
+
+**Known limitation — restarts.** By design (see [`ABOUT.md`](ABOUT.md)), the list of sets and documents lives in backend memory, while the vectors live in Chroma's volume. After *any* backend restart the UI shows no sets, but previously stored vectors are still searchable under "Search everything" and can't be removed from the UI. Run `./docker/rag.sh down --purge` before a fresh session or demo to avoid answers from documents you can no longer see.
 
 **Troubleshooting**
 
@@ -114,6 +119,7 @@ Open the frontend URL Streamlit prints (typically `http://localhost:8501`). "Set
 - `tests/e2e/` — cross-tier Playwright end-to-end tests (`rag-e2e`, not installed as an application tier)
 - `docker/` — Dockerfiles per tier, the Compose file, and `rag.sh` (start/stop script; see *Running the Application* above)
 - `data/` — small sample documents (one per supported format) for manual upload testing
+- `ABOUT.md` — assumptions, defaults, known limitations, open questions
 - `architecture/` — architecture and tech-stack documentation
 - `specs/` — planning documents, one per feature/phase
 

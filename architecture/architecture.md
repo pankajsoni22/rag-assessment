@@ -30,13 +30,16 @@ directly, so this document stays a readable overview:
   class per format behind a shared interface (see *Document Loaders*
   below) — adding PowerPoint later means adding one new class and
   registering it, nothing else changes.
-- **No dependency beyond what's needed.** Set/document bookkeeping (which
-  documents belong to which set, filenames, status) is kept as metadata
-  inside Chroma rather than introducing a second database. In-flight
-  ingestion status and conversation history live in backend process memory
-  — acceptable because this is a single-user, no-accounts tool (spec
-  "Who Uses This"), and both are things the user can simply redo if the
-  backend restarts (re-upload a document; start a new chat turn).
+- **No dependency beyond what's needed.** There is no second database. Chroma
+  holds chunks, embeddings and per-chunk metadata; set/document bookkeeping
+  (which documents belong to which set, filenames, status), ingestion status
+  and conversation history live in backend process memory — acceptable
+  because this is a single-user, no-accounts tool (spec "Who Uses This"),
+  and all of it is something the user can simply redo after a restart
+  (re-create sets, re-upload, start a new chat). *Amended in Phase 4:* this
+  originally said set/document bookkeeping would be derived from Chroma
+  metadata; that was dropped — see *Storage Tier* and *Known Consequence*
+  below.
 
 ## Tier Mapping
 
@@ -83,15 +86,31 @@ directly, so this document stays a readable overview:
   `chromadb` client — this is the "swapped or split into its own service
   later" case the `VectorStore` interface was deliberately designed for
   (see *Design Patterns* below), now exercised for real.
-- Document and set bookkeeping is **not** a separate database. Every chunk
-  written to Chroma carries metadata: `document_id`, `set_id`, `filename`,
-  `format`, `uploaded_at`. Listing "documents in a set" or "all sets" is a
-  metadata query against Chroma, not a second source of truth to keep in
-  sync.
-- In-flight ingestion status (`processing` / `ready` / `error`) lives in
-  backend memory only. A document only exists in Chroma once it's fully
-  processed, so there's nothing to reconcile after a crash — the document
-  simply isn't there yet, and the user re-uploads.
+- Document and set bookkeeping is **not** a separate database, and it is
+  **not stored in Chroma either**. `DocumentSetService` keeps sets,
+  documents (id, name, status, content hash, set membership) in backend
+  memory. This was decided in Phase 4 (spec 006): an empty, just-created set
+  has no chunks, so there is nothing in Chroma to derive it from. Chroma
+  remains the source of truth for chunks and vectors only. Every chunk still
+  carries metadata (`document_id`, `set_id`, `filename`, `format`,
+  `uploaded_at`), which is what set-scoped retrieval filters on.
+- Ingestion status (`processing` / `ready` / `error`) is also memory-only.
+  A document's chunks are only written to Chroma once it is fully processed
+  (embedding failure leaves nothing behind), so there is nothing to
+  reconcile after a crash — the user re-uploads.
+- **Known consequence (unresolved, see `ABOUT.md` §5.1/§6):** the registry
+  is volatile but Chroma's data is not (named volume under Docker; a
+  directory locally). After a backend restart the UI lists no sets or
+  documents, yet previously stored vectors remain and are still returned by
+  unscoped ("search everything") retrieval; the UI cannot remove them.
+  Workaround: purge the volume (`./docker/rag.sh down --purge`). Fixing it
+  is an open design decision (persist the registry, or rebuild it from
+  Chroma on startup).
+- Re-uploading: a byte-identical file (same filename + SHA-256) in the same
+  set is rejected as a duplicate; a same-named file with different content
+  replaces the old document — the old document and its vectors are removed
+  only after the new one is fully ingested. Removing a document or deleting
+  a set deletes its vectors from Chroma.
 - This keeps the storage tier exactly as originally scoped (Chroma only)
   and avoids a second dependency, at the cost of the backend being the
   only thing that can serve "list documents" queries quickly (acceptable —
@@ -304,9 +323,40 @@ own container instead of staying embedded.
 
 ---
 
+## Implementation Decisions & Defaults
+
+Values and behaviours settled while building. **Origin** says whether the
+user chose it (*User*) or it was picked during implementation without review
+(*Default* — a proposal, change freely). The plain-language version, with
+known limitations, is in [`ABOUT.md`](../ABOUT.md).
+
+| Area | Decision | Origin | Where |
+|---|---|---|---|
+| Chunking | LlamaIndex `SentenceSplitter`, 512 / overlap 50; empty pieces dropped | Default | `services/chunking_service.py` |
+| Retrieval | top-k = 5, cosine distance (`hnsw:space=cosine`), optional `set_id` filter; query text is the raw latest question (no history-based rewriting, no re-ranking) | Default | `rag_orchestrator.py`, `_chroma_collection.py` |
+| Prompt | One fixed system prompt: answer only from the numbered context, say so if insufficient; history replayed as chat turns; context blocks tagged with filename | Default | `services/generation_service.py` |
+| Grounding | Zero retrieved chunks → fixed "not found" answer, LLM not called (`grounded=false`). Otherwise `grounded=true` and every retrieved chunk is cited; no distance threshold | User (pre-check approach) / Default (no threshold) | `generation_service.py` |
+| Generation model | Groq `openai/gpt-oss-120b`, temperature 0 | User (Groq) / Default (model, temp) | `clients/groq_client.py` |
+| Embedding model | Gemini `gemini-embedding-001` (replaces `text-embedding-004`, superseded) | User (Gemini) / Default (model) | `clients/gemini_client.py` |
+| Rate limits | Gemini: batches of 100, 120 s timeout, 6 attempts, exponential backoff + jitter, max 45 s; Groq: 4 retries. 429/503 surface as a plain rate-limit error | User (backoff + jitter) / Default (numbers) | `clients/*.py` |
+| Ingestion | Synchronous request; sequential multi-file upload from the UI; temp file deleted after parsing | User (temp file, multi-upload) / Default (sync) | `document_routes.py`, `set_manager.py` |
+| API | Dedicated Pydantic DTOs; synchronous routes; upload errors: 400 unsupported extension, 404 unknown set, 409 identical duplicate, 422 empty/unreadable file, 429 rate-limited (failed documents are marked `error`) | User (DTOs) / Default (rest) | `api/` |
+| Duplicates | Same set + same filename + same content → rejected; same filename, new content → replace | User | `document_set_service.py`, `ingestion_service.py` |
+| Sessions | One session id per browser tab (Streamlit session state); history in memory, unbounded, never evicted; "New chat" rotates the id | User (in-memory) / Default (rest) | `session_state.py`, `conversation_service.py` |
+| Frontend | Multi-page Streamlit (`Home`, `Sets & Documents`, `Chat`), explicit URLs `/`, `/sets`, `/chat`; 300 s client timeout; 10 MB Streamlit upload ceiling that the UI deliberately does not advertise | User (multi-page, independent selector, no size text) / Default (timeout, ceiling) | `frontend/` |
+| Config | `pydantic-settings` in backend and frontend; shared repo-root `.env`; backend ignores unknown keys | User | `config.py` |
+| Deployment | Compose: chroma → backend → frontend, health-gated; Chroma in its own container pinned to 1.5.9; `docker/rag.sh` entry point | User (containers, Chroma split) / Default (pins, restart policy, script) | `docker/` |
+
 ## Open Items
 
-- Exact API endpoint/route design (paths, request/response schemas) — to
-  be worked out when the backend is scaffolded, not before.
-- Top-k retrieval count, chunk size/overlap, and prompt template — tuning
-  decisions to make once there's a working pipeline to test against.
+Resolved by the defaults above (to be re-tuned against real documents, not
+"undecided"): top-k, chunk size/overlap, prompt template, API endpoint design
+(routes: `POST/GET/DELETE /sets`, `POST/GET/DELETE /documents`,
+`POST /query`, `GET /health` — see `backend/api/`).
+
+Still open:
+- **Restart behaviour** of the in-memory registry vs. persistent vectors
+  (see *Storage Tier → Known consequence*).
+- A relevance threshold for the "not found" answer.
+- Rewriting follow-up questions with conversation history before retrieval.
+- History length limit / session eviction.

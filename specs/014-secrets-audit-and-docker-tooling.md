@@ -49,7 +49,7 @@ Reviewed the compose file and both Dockerfiles. Changes:
 - `restart: unless-stopped` on all services.
 - Frontend image copies `.streamlit/` (done in spec 013) so config applies.
 - Verified: build from a clean state, `depends_on` ordering by health,
-  Chroma unpublished, no secrets in images, data persisted across `down`/`up`.
+  Chroma unpublished, no secrets in images. **Correction (spec 015):** an earlier draft of this line and of the README/`rag.sh` said uploaded data survives `down`/`up`; that was wrong — vectors survive in the volume, but the set/document registry is in memory, so the UI lists nothing after a restart.
 
 Known limitations (unchanged, deliberate): containers run as root; no TLS or
 auth in front of the frontend/backend (local/assessment deployment);

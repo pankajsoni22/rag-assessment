@@ -83,3 +83,9 @@ Verify both vertical slices (ingestion and question-answering) end-to-end throug
 ## Next Steps
 
 Before starting Phase 1, create `specs/003-phase-1-project-scaffolding-and-environment-setup.md` with the technical plan for that phase. Each subsequent phase gets its own spec file in the same way, numbered sequentially with a `phase-<n>-` tag, immediately before that phase's work begins.
+
+---
+
+## Post-plan changes
+
+Work done after Phase 9 (duplicate/replace semantics, multi-file upload, rate-limit hardening, containerization, UX refresh, secrets audit) and the values chosen during implementation that this plan did not anticipate are recorded in `specs/012` to `specs/015`, and summarized in `architecture/architecture.md` (*Implementation Decisions & Defaults*) and `ABOUT.md`.

@@ -106,6 +106,8 @@ if sets:
     with st.container(border=True):
         st.subheader(f":material/upload_file: Step 2 · Upload documents to '{set_names[chosen_id]}'")
 
+        st.caption("PDF, Word (.docx), plain text or Markdown · small files work best.")
+
         if "uploader_key" not in st.session_state:
             st.session_state.uploader_key = 0
 

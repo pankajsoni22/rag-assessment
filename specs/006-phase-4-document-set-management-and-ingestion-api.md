@@ -28,3 +28,8 @@ Technical spec for Phase 4 of `specs/002-master-development-plan.md`: `DocumentS
 
 - `uv run --package rag-backend pytest` — 39 passed (service unit tests using a real tmp-dir `ChromaVectorStore` + fake embedding client; API route tests via `TestClient` + `dependency_overrides`).
 - Live smoke test: started the real server, hit `/health`, created and listed a set over real HTTP, and confirmed the upload path reaches the real composition root (fails at the real Gemini call with a fake key, as expected — the same error/`ERROR`-status path already covered by unit tests).
+
+## Later changes & consequences (added 2026-09-18)
+
+- **Duplicates:** byte-identical re-upload into the same set → `409`; same filename with new content replaces the old document (old vectors removed only after the new one is ingested). Requested by the user after Phase 9 — see `specs/015`.
+- **Consequence of the in-memory registry (decision above):** with Chroma persisted on a volume, a backend restart empties the UI's set/document lists while stored vectors remain searchable. The user was asked to choose in-memory; this side effect was not discussed then. Recorded in `ABOUT.md` §5.1 and left as an open question.

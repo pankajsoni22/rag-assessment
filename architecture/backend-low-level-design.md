@@ -255,7 +255,9 @@ classDiagram
 Controllers stay thin (*Service layer* pattern) — they translate HTTP to
 service calls and back, with no business logic of their own. Shown here to
 establish which service each controller depends on; exact routes and
-request/response schemas are deferred, as noted in `architecture.md`.
+request/response schemas were deferred at design time and have since been
+implemented (`backend/api/`; see `architecture.md`, *Implementation Decisions &
+Defaults*).
 
 ```mermaid
 classDiagram
@@ -297,9 +299,14 @@ hoc from inside a service.
   will firm up once the backend is scaffolded (Phase 1 of
   `specs/002-master-development-plan.md`) and real framework types (e.g.
   FastAPI's `UploadFile`, LlamaIndex node types) are in play.
-- API request/response DTOs, error/exception hierarchy, and pagination for
-  list endpoints are not designed yet — deferred to the phase(s) that build
-  the API layer and ingestion pipeline.
+- *(Resolved during implementation)* API request/response DTOs are dedicated
+  Pydantic models (`api/schemas.py`); the exception hierarchy is a set of small
+  service-level errors (`SetNotFoundError`, `DocumentNotFoundError`,
+  `DuplicateDocumentError`, `EmptyDocumentError`, `RateLimitedError`) mapped to
+  HTTP statuses in the routes; list endpoints are unpaginated. **Diagram
+  drift:** `DocumentSetService` and `ConversationService` are shown here
+  without their in-memory stores, and `Document` gained `content_hash` for
+  duplicate detection — this diagram was not regenerated.
 - Whether `EmbeddingService` is shared by reference between
   `IngestionService` and `RetrievalService` (single instance) or
   constructed separately is an implementation detail to settle during

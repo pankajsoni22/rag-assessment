@@ -28,14 +28,18 @@ Usage: ./docker/rag.sh <command> [options]
 
 Commands:
   up                 Build images if needed and start everything (waits until healthy)
-  down               Stop and remove the containers (your uploaded data is kept)
-  down --purge       Also delete the data volume, i.e. ALL uploaded documents (asks first)
+  down               Stop and remove the containers (sets/document lists reset; see note below)
+  down --purge       Also delete the data volume, i.e. all stored document vectors (asks first)
   restart            down + up
   status             Show container state
   logs [service]     Follow logs (service: frontend | backend | chroma; default: all)
   help               Show this help
 
 After 'up':  frontend $FRONTEND_URL   backend $BACKEND_URL/docs
+
+Note: sets and the document list are held in backend memory, so they are empty
+after every restart. Stored vectors stay in the data volume but are no longer
+listed in the UI; use 'down --purge' when you want a genuinely clean slate.
 USAGE
 }
 
@@ -84,7 +88,7 @@ cmd_up() {
 cmd_down() {
   check_docker
   if [[ "${1:-}" == "--purge" ]]; then
-    warn "this deletes the data volume - every uploaded document and its index."
+    warn "this deletes the data volume - every stored document vector (the set/document lists are already reset on restart)."
     read -r -p "Type 'yes' to continue: " answer
     [[ "$answer" == "yes" ]] || die "aborted; nothing was stopped or deleted."
     compose down --volumes
@@ -92,7 +96,8 @@ cmd_down() {
   else
     [[ $# -eq 0 ]] || die "unknown option '$1' (did you mean --purge?)"
     compose down
-    info "Stopped. Uploaded data is kept; './docker/rag.sh up' brings it back."
+    info "Stopped. Sets and the document list reset on restart (they live in backend memory);"
+    info "old vectors remain in the data volume - use 'down --purge' for a clean slate."
   fi
 }
 

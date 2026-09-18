@@ -4,9 +4,10 @@
 |---|---|---|
 | Language / backend framework | Python + FastAPI | Dominant ecosystem for RAG/LLM tooling; async; typed; splits cleanly into services later |
 | RAG orchestration | LlamaIndex | RAG-focused framework; fastest path to a working chunking/retrieval/prompting pipeline |
-| Embeddings | Google Gemini (`text-embedding-004`), free tier | No local model/compute; generous free daily quota via Google AI Studio; requires an API key and is rate-limited |
+| Embeddings | Google Gemini (`gemini-embedding-001`, originally planned as `text-embedding-004`, which was superseded), free tier | No local model/compute; generous free daily quota via Google AI Studio; requires an API key and is rate-limited |
 | Vector store | Chroma | Free, zero-account database; runs embedded (local dev) or as its own server (Docker) — see below |
-| LLM (generation) | Groq API (free tier) | Free, fast inference of open models (e.g. Llama, Mixtral); requires an API key and is rate-limited |
+| LLM (generation) | Groq API (free tier) | Free, fast inference of open models; currently `openai/gpt-oss-120b` (the originally planned Llama model was no longer in the account's catalogue); requires an API key and is rate-limited |
+| Tooling | `uv` workspace, Python 3.12, one package per tier; `pypdf` (PDF text), `python-docx` (Word), `llama-index-core` (chunking only), `google-genai` and `groq` SDKs, `pydantic-settings` | Chosen with the user in Phases 1, 3, 5 and 7; see `specs/003`, `005`, `007`, `009` |
 | Frontend | Streamlit | Fast to build a working chat/query UI without full frontend engineering effort |
 | Containerization | Docker + Docker Compose | Packages each tier as its own image/container for a reproducible run, without changing the free-tier/no-local-model stack above |
 

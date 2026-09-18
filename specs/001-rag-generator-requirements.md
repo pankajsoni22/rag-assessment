@@ -173,3 +173,19 @@ All open questions from the first draft have been resolved with Pankaj on
 
 This spec is considered final as of this decisions log. Any further change
 to scope should be proposed as an amendment here, not silently implemented.
+
+---
+
+## Amendments
+
+Changes to this spec after it was declared final, each requested by Pankaj
+during development (per the rule above: proposed here, not silently
+implemented). Full context in `specs/015-decisions-and-doc-reconciliation.md`.
+
+| Date | Amendment | Adds/changes |
+|---|---|---|
+| 2026-09-18 | **Re-uploading a document.** Re-uploading a byte-identical file into the same set is rejected (one entry only). Re-uploading a same-named file with different content replaces the old one, and the old content's vectors are deleted. | A1 (new behaviour) |
+| 2026-09-18 | **Multiple files per upload.** Several documents can be selected and processed with one click. | A1.3 |
+| 2026-09-18 | **No stale data.** Removing a document or set must remove its vectors from the store. | A1.6, B6.11 |
+| 2026-09-17/18 | **Free-tier realism.** The app runs on rate-limited free APIs; the UI asks for *small files* rather than advertising a size, and rate-limit errors are shown plainly (with automatic back-off and jitter). The UI does not state any file-size number. | B3, B4, A5.22 |
+| 2026-09-18 | **Guided first use.** A landing page explains the four steps (create set → select set → upload → ask) and leads into the app. | A5.21 |

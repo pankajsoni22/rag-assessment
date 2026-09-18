@@ -54,3 +54,8 @@ Plan and record for Phase 5 of `specs/002-master-development-plan.md`: the Retri
 ## Open Question Carried Forward
 
 None outstanding for this phase — both forks (SDK choice, grounding check) are resolved above. Prompt wording/structure itself is an implementation detail to finalize during coding, not fixed here.
+
+## Implementation notes (added 2026-09-18)
+
+- **Model:** the placeholder Llama model 404s on the account; `openai/gpt-oss-120b` is used (verified against `client.models.list()`). Temperature is pinned to 0.
+- **Grounding pre-check in practice:** because Chroma returns up to `top_k` results for any non-empty scope, the zero-chunks branch only triggers for an empty scope (e.g. a set with no documents). Unrelated questions are therefore answered by the model's own judgement and still reported `grounded=true` with citations. Adding a distance threshold (mentioned above as a possible follow-up) is an open decision — see `ABOUT.md` §6.

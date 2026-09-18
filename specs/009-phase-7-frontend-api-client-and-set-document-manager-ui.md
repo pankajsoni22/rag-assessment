@@ -67,3 +67,7 @@ A `get_api_client()` provider, decorated with `st.cache_resource`, gives pages a
 
 - Exact table/layout styling for documents and sets is a UI-polish detail to settle during implementation, not fixed here.
 - Whether "Delete set" needs a confirmation step (destructive action) is worth a quick decision at implementation time — not architectural, but worth not overlooking.
+
+## Later changes (added 2026-09-18)
+
+Requested by the user after Phase 9; details in `specs/015` and `specs/013`: guidance banner asking for **small files** (no size number shown in the UI, including Streamlit's own "limit per file" line, which is hidden); multi-file upload processed sequentially in one click; duplicate/replace handling; separate bordered cards for the "create/select set" and "upload" steps; a longer client timeout (300 s) and rate-limit errors shown as plain messages.
