@@ -5080,11 +5080,11 @@
 
 ❯ pydantic_core._pydantic_core.ValidationError: 3 validation errors for         
   Settings groq_api_key Extra inputs are not permitted [type=extra_forbidden,   
-  input_value='gsk_REZ8VfNFvqqZzU0RBxkF...gIplGT1ihKqa7OWTUujOOIu',             
+  input_value='[REDACTED-GROQ-KEY]',             
   input_type=str] For further information visit                                 
   https://errors.pydantic.dev/2.13/v/extra_forbidden google_api_key Extra       
   inputs are not permitted [type=extra_forbidden,                               
-  input_value='AQ.Ab8RN6II3AgCbEzNQcaCH...UML8r3lEx8st_qsOSaHEVTg',             
+  input_value='[REDACTED-GOOGLE-KEY]',             
   input_type=str] For further information visit                                 
   https://errors.pydantic.dev/2.13/v/extra_forbidden chroma_persist_dir Extra   
   inputs are not permitted [type=extra_forbidden,                               

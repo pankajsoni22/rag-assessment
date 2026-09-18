@@ -24,26 +24,65 @@ Python + FastAPI backend, LlamaIndex orchestration, Google Gemini embeddings, Gr
 
 ## Running the Application
 
-### Option A: Docker Compose (recommended)
-Runs all three containers (frontend, backend, and Chroma as its own
-service) with one command — see
-[`architecture/architecture.md`](architecture/architecture.md)'s
-*Deployment* section and [`specs/012-containerization.md`](specs/012-containerization.md)
+### Option A: Docker (recommended)
+Runs all three containers — frontend, backend, and Chroma as its own
+service — with one command. See
+[`architecture/architecture.md`](architecture/architecture.md)'s *Deployment*
+section and [`specs/012-containerization.md`](specs/012-containerization.md)
 for why Chroma gets its own container.
 
-Prerequisite: Docker with the Compose plugin (`docker compose version`).
+**Prerequisites:** Docker with the Compose plugin (`docker compose version`
+should work) and a running Docker daemon. You do *not* need `uv` for this
+option.
 
-```sh
-cd docker
-docker compose up --build
-```
+**Steps**
 
-- Frontend: http://localhost:8501 (opens on a landing page — click **Start With RAG Assessment Project**)
-- Backend: http://localhost:8000 (docs at `/docs`, health at `/health`)
-- Chroma isn't exposed to the host — only the backend container talks to it.
+1. Configure your keys (once) — see *Configuration* above. In short:
+   ```sh
+   cp .env.example .env      # then put your GROQ_API_KEY and GOOGLE_API_KEY in .env
+   ```
+2. Start everything, from the repo root:
+   ```sh
+   ./docker/rag.sh up
+   ```
+   The first run builds the images and takes a few minutes; later runs are
+   fast. The command returns once every container reports healthy.
+3. Open the frontend at http://localhost:8501 and click **Start With RAG Assessment Project**.
+   The backend API is at http://localhost:8000 (interactive docs at `/docs`,
+   health at `/health`). Chroma isn't exposed to the host — only the backend
+   container talks to it.
+4. Stop everything:
+   ```sh
+   ./docker/rag.sh down
+   ```
 
-`docker compose down` stops everything; add `-v` to also delete the
-`chroma-data` volume (wipes all uploaded documents).
+**`docker/rag.sh` commands**
+
+| Command | What it does |
+|---|---|
+| `./docker/rag.sh up` | Builds images if needed, starts all containers, waits until they're healthy, prints the URLs. Checks Docker is available and that `.env` exists with both API keys filled in (creating `.env` from `.env.example` if it's missing) — and tells you exactly what to fix if not. |
+| `./docker/rag.sh down` | Stops and removes the containers. **Uploaded documents are kept** in the `chroma-data` volume and reappear on the next `up`. |
+| `./docker/rag.sh down --purge` | Same, but also deletes the volume — **all uploaded documents and their index**. Asks you to type `yes` first. |
+| `./docker/rag.sh restart` | `down` then `up`. |
+| `./docker/rag.sh status` | Shows container state and health. |
+| `./docker/rag.sh logs [service]` | Follows logs; `service` is `frontend`, `backend` or `chroma` (default: all). |
+| `./docker/rag.sh help` | Prints usage. |
+
+Containers restart automatically (`unless-stopped`) if Docker or the machine
+restarts, until you run `down`. After changing code, run `./docker/rag.sh up`
+again — it rebuilds. After changing `.env`, run `./docker/rag.sh restart`.
+
+The script is a thin wrapper; the equivalent raw commands are
+`docker compose -f docker/docker-compose.yml up --build -d --wait` and
+`docker compose -f docker/docker-compose.yml down`.
+
+**Troubleshooting**
+
+- *"these are empty in .env"* — fill in `GROQ_API_KEY` / `GOOGLE_API_KEY`, then rerun.
+- *"cannot reach the Docker daemon"* — start Docker (Docker Desktop, or `sudo systemctl start docker`), and make sure your user may run `docker` (e.g. is in the `docker` group).
+- *Port 8501 or 8000 already in use* — stop whatever holds it (e.g. a Option B run) and retry.
+- *A container is unhealthy* — `./docker/rag.sh logs backend` (or `frontend` / `chroma`).
+- *Uploads or chat fail with rate-limit errors* — the free-tier APIs are limited; use small files (see below).
 
 ### Option B: Run each tier directly with uv
 From the repo root:
@@ -62,12 +101,18 @@ Open the frontend URL Streamlit prints (typically `http://localhost:8501`). "Set
 
 **Use small files.** Both external APIs are free-tier and rate-limited (see `architecture/tech-stack.md`) — a large document produces many chunks, and each chunk needs its own embedding call, so big or scanned documents commonly hit a rate limit or fail with "no readable text content" before finishing. Prefer small, text-based PDFs or plain text files (see `data/` for ready-made samples in every supported format). There's a UI-level upload size sanity limit (`.streamlit/config.toml`) — not a guarantee that any file under it will process cleanly on the free tier.
 
+## Security & Secrets
+- API keys live only in `.env` (gitignored). `.env.example` holds empty placeholders and is the only env file committed.
+- `.env` is excluded from Docker images (`.dockerignore`), and the containers receive keys at runtime through `env_file:` — no key is baked into an image layer.
+- `project_transcripts/` is committed, so **never paste a key, token or private key into a session you intend to export**, and read exported transcripts before committing them. Error output can leak partial keys (a pydantic validation error once printed the first and last characters of both API keys — since redacted). If a real key ever reaches git, rotate it at the provider; deleting it from a later commit does not remove it from history.
+- Full audit record: [`specs/014-secrets-audit-and-docker-tooling.md`](specs/014-secrets-audit-and-docker-tooling.md).
+
 ## Project Structure
 - `project/backend/` — FastAPI app and RAG pipeline (`rag-backend` package)
 - `project/storage/` — Chroma persistence (`rag-storage` package)
 - `project/frontend/` — Streamlit UI (`rag-frontend` package)
 - `tests/e2e/` — cross-tier Playwright end-to-end tests (`rag-e2e`, not installed as an application tier)
-- `docker/` — Dockerfiles per tier and the Compose file (see *Running the Application* above)
+- `docker/` — Dockerfiles per tier, the Compose file, and `rag.sh` (start/stop script; see *Running the Application* above)
 - `data/` — small sample documents (one per supported format) for manual upload testing
 - `architecture/` — architecture and tech-stack documentation
 - `specs/` — planning documents, one per feature/phase

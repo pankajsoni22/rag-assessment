@@ -285,6 +285,15 @@ graph LR
   in the compose file itself, since those need container-network addresses
   (`http://backend:8000`, `chroma`) rather than the localhost addresses
   `.env` uses for local (non-Docker) development.
+- All three services have health checks (`chroma`: TCP probe, `backend`:
+  `/health`, `frontend`: `/_stcore/health`) and `restart: unless-stopped`.
+  `depends_on: condition: service_healthy` orders startup
+  chroma → backend → frontend.
+- `docker/rag.sh` (`up`, `down`, `down --purge`, `restart`, `status`, `logs`)
+  is the supported entry point for running the stack. It preflights Docker
+  and `.env`, then delegates to `docker compose up --build -d --wait` /
+  `down`; the compose file remains the single source of truth for
+  the deployment. It lives in `docker/` with the rest of the container tooling.
 - Local (non-Docker) development is unchanged: `CHROMA_HOST` defaults to
   empty, which keeps the backend on the embedded `ChromaVectorStore` exactly
   as before Docker existed. See *Storage Tier* above.
