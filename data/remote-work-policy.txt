@@ -1,0 +1,63 @@
+Acme Robotics — Remote Work Policy
+Effective Date: January 1, 2026
+Owner: People Operations
+
+1. Purpose
+
+This policy defines the rules and expectations for employees who work
+remotely, either on a full-time or hybrid basis. It applies to all
+full-time employees who have received written approval from their
+manager and People Operations to work outside of a company office.
+
+2. Eligibility
+
+Employees become eligible for remote work after completing 90 days of
+employment and receiving a satisfactory performance review. Roles that
+require physical presence, such as hardware lab technicians and site
+security staff, are not eligible for remote arrangements.
+
+3. Work Hours and Availability
+
+Remote employees are expected to be reachable during the core hours of
+10:00 AM to 3:00 PM in their assigned time zone. Outside of core hours,
+employees may set their own schedule as long as they meet weekly
+deliverables agreed upon with their manager.
+
+4. Equipment and Expenses
+
+The company provides a laptop, monitor, and a one-time home office
+stipend of $500 to every approved remote employee. Employees are
+responsible for maintaining a reliable internet connection of at least
+25 Mbps download speed. Internet reimbursement of up to $50 per month
+is available upon submission of a receipt.
+
+5. Security Requirements
+
+All remote employees must use the company VPN when accessing internal
+systems, enable full-disk encryption on their work laptop, and lock
+their screen whenever they step away from their workstation. Personal
+devices may not be used to access customer data under any
+circumstances.
+
+6. Performance Expectations
+
+Remote work does not change an employee's performance expectations.
+Managers will continue to evaluate remote employees using the same
+quarterly OKR process used for in-office staff. Employees who
+consistently miss deadlines or are unreachable during core hours may
+have their remote work privileges reviewed or revoked.
+
+7. Travel to Headquarters
+
+Remote employees are expected to travel to company headquarters in
+Austin, Texas at least twice per year for team planning sessions. The
+company covers reasonable travel costs, including economy airfare,
+hotel, and a daily meal allowance of $75.
+
+8. Policy Review
+
+This policy is reviewed annually by People Operations in collaboration
+with department heads. Employees may propose changes by submitting
+feedback through the internal People Ops portal.
+
+For questions about this policy, contact people-ops@acmerobotics.example.

@@ -1,0 +1,144 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 2433 >>
+stream
+BT
+/F1 11 Tf
+15 TL
+1 0 0 1 72 720 Tm
+/F1 16 Tf
+(Project Charter: Beacon Migration) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(Project Sponsor: VP of Engineering, Dana Reyes) Tj
+T*
+/F1 11 Tf
+(Project Lead: Priya Nadella) Tj
+T*
+/F1 11 Tf
+(Start Date: February 2, 2026    Target Completion: May 29, 2026) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(1. Background) Tj
+T*
+/F1 11 Tf
+(The Beacon service currently runs on a decommissioned internal hosting platform that) Tj
+T*
+/F1 11 Tf
+(reaches end-of-life support in Q3 2026. This charter authorizes the migration of Beacon to) Tj
+T*
+/F1 11 Tf
+(the company's standard Kubernetes platform before that deadline.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(2. Objectives) Tj
+T*
+/F1 11 Tf
+(Migrate all Beacon workloads to Kubernetes with zero data loss, reduce monthly) Tj
+T*
+/F1 11 Tf
+(infrastructure cost by at least 20 percent, and establish automated deployment pipelines) Tj
+T*
+/F1 11 Tf
+(so future releases no longer require manual server provisioning.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(3. Scope) Tj
+T*
+/F1 11 Tf
+(In scope: the Beacon API service, its PostgreSQL database, and the nightly batch reporting) Tj
+T*
+/F1 11 Tf
+(job. Out of scope: the Beacon mobile app, which is managed by a separate team and has no) Tj
+T*
+/F1 11 Tf
+(infrastructure dependency on this migration.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(4. Milestones) Tj
+T*
+/F1 11 Tf
+(Milestone 1 \(Feb 20\): staging environment fully migrated and passing smoke tests.) Tj
+T*
+/F1 11 Tf
+(Milestone 2 \(Mar 31\): production database replicated with less than 5 minutes of) Tj
+T*
+/F1 11 Tf
+(replication lag. Milestone 3 \(Apr 30\): production traffic cut over behind a feature flag.) Tj
+T*
+/F1 11 Tf
+(Milestone 4 \(May 29\): legacy platform decommissioned.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(5. Risks) Tj
+T*
+/F1 11 Tf
+(The primary risk is data drift during the cutover window. This is mitigated by running) Tj
+T*
+/F1 11 Tf
+(dual writes to both the old and new database for a two-week validation period before the) Tj
+T*
+/F1 11 Tf
+(legacy database is retired. A secondary risk is unfamiliarity with Kubernetes among the) Tj
+T*
+/F1 11 Tf
+(on-call rotation, mitigated by mandatory training completed before Milestone 3.) Tj
+T*
+/F1 11 Tf
+() Tj
+T*
+/F1 11 Tf
+(6. Approval) Tj
+T*
+/F1 11 Tf
+(This charter requires sign-off from the VP of Engineering, the Head of Infrastructure, and) Tj
+T*
+/F1 11 Tf
+(the Beacon service owner before work begins.) Tj
+T*
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000185 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+2796
+%%EOF
