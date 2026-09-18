@@ -94,6 +94,48 @@ def test_upload_document_unsupported_extension_returns_400(client):
     assert response.status_code == 400
 
 
+def test_upload_byte_identical_duplicate_returns_409(client):
+    set_id = client.post("/sets", json={"name": "Notes"}).json()["id"]
+    client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("note.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+
+    response = client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("note.txt", io.BytesIO(b"hello world"), "text/plain")},
+    )
+
+    assert response.status_code == 409
+    assert "note.txt" in response.json()["detail"]
+    # Duplicate rejection doesn't create a second entry.
+    assert len(client.get("/documents", params={"set_id": set_id}).json()) == 1
+
+
+def test_upload_same_filename_different_content_replaces_existing(client):
+    set_id = client.post("/sets", json={"name": "Notes"}).json()["id"]
+    first = client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("note.txt", io.BytesIO(b"hello world"), "text/plain")},
+    ).json()
+
+    response = client.post(
+        "/documents",
+        params={"set_id": set_id},
+        files={"file": ("note.txt", io.BytesIO(b"a totally different body"), "text/plain")},
+    )
+
+    assert response.status_code == 201
+    replaced = response.json()
+    assert replaced["id"] != first["id"]
+
+    documents = client.get("/documents", params={"set_id": set_id}).json()
+    assert [d["id"] for d in documents] == [replaced["id"]]
+
+
 def test_upload_document_unknown_set_returns_404(client):
     response = client.post(
         "/documents",

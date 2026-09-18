@@ -40,6 +40,7 @@ class Document:
     set_id: str
     filename: str
     format: DocumentFormat
+    content_hash: str
     status: IngestionStatus
     uploaded_at: datetime
 

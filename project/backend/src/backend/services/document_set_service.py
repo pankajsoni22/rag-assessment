@@ -16,6 +16,10 @@ class DocumentNotFoundError(Exception):
     pass
 
 
+class DuplicateDocumentError(Exception):
+    pass
+
+
 class DocumentSetService:
     """Owns all set/document bookkeeping in backend memory (id, name, status, etc.).
 
@@ -54,14 +58,35 @@ class DocumentSetService:
         for document_id in document_ids:
             self.remove_document(document_id)
 
-    def register_document(self, set_id: str, filename: str, format: DocumentFormat) -> Document:
+    def find_document_by_filename(self, set_id: str, filename: str) -> Document | None:
+        return next(
+            (
+                d
+                for d in self._documents.values()
+                if d.set_id == set_id and d.filename == filename
+            ),
+            None,
+        )
+
+    def register_document(
+        self, set_id: str, filename: str, format: DocumentFormat, content_hash: str
+    ) -> Document:
         if set_id not in self._sets:
             raise SetNotFoundError(set_id)
+        existing = self.find_document_by_filename(set_id, filename)
+        if existing is not None and existing.content_hash == content_hash:
+            # Byte-identical re-upload of a file already in this set - reject
+            # rather than silently making a second entry. A same-named file
+            # with *different* content is not a duplicate - it's handled as
+            # a replace by IngestionService, which removes `existing` only
+            # after the new content ingests successfully.
+            raise DuplicateDocumentError(filename)
         document = Document(
             id=str(uuid.uuid4()),
             set_id=set_id,
             filename=filename,
             format=format,
+            content_hash=content_hash,
             status=IngestionStatus.PROCESSING,
             uploaded_at=datetime.now(timezone.utc),
         )

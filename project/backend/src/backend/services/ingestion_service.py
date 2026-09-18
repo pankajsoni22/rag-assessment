@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from backend.domain.models import Document, DocumentFormat
@@ -32,8 +33,20 @@ class IngestionService:
         self._doc_set_service = doc_set_service
 
     def ingest(self, file: Path, filename: str, format: DocumentFormat, set_id: str) -> Document:
+        # Looked up before register_document (which only rejects a byte-identical
+        # re-upload) so that, when the content differs, we know which older
+        # document with this filename to remove once the new one is ready.
+        existing = self._doc_set_service.find_document_by_filename(set_id, filename)
+        try:
+            content_hash = hashlib.sha256(file.read_bytes()).hexdigest()
+        except OSError:
+            # File can't be read at all (e.g. missing) - fall back to a hash
+            # that can never match a real document, so registration proceeds
+            # and the *same* read failure surfaces via loader.parse() below,
+            # inside the try/except that marks the document as errored.
+            content_hash = ""
         document = self._doc_set_service.register_document(
-            set_id=set_id, filename=filename, format=format
+            set_id=set_id, filename=filename, format=format, content_hash=content_hash
         )
         try:
             loader = self._loader_registry.get_loader(format)
@@ -62,6 +75,12 @@ class IngestionService:
         except Exception:
             self._doc_set_service.mark_error(document.id)
             raise
+
+        if existing is not None:
+            # Same filename, different content: the new version fully
+            # replaces the old one now that it's successfully embedded -
+            # this also deletes the old vectors from the vector store.
+            self._doc_set_service.remove_document(existing.id)
 
         self._doc_set_service.mark_ready(document.id)
         return self._doc_set_service.get_document(document.id)

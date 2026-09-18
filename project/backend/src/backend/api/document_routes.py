@@ -13,6 +13,7 @@ from backend.loaders.registry import format_from_filename
 from backend.services.document_set_service import (
     DocumentNotFoundError,
     DocumentSetService,
+    DuplicateDocumentError,
     SetNotFoundError,
 )
 from backend.services.ingestion_service import EmptyDocumentError, IngestionService
@@ -43,6 +44,15 @@ def upload_document(
             )
         except SetNotFoundError as exc:
             raise HTTPException(status_code=404, detail=f"Set not found: {exc}") from exc
+        except DuplicateDocumentError as exc:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"'{exc}' with identical content already exists in this set. "
+                    "Nothing to do — change the file's content if you want to "
+                    "re-upload it, and it will replace the existing copy."
+                ),
+            ) from exc
         except EmptyDocumentError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
         except RateLimitedError as exc:
