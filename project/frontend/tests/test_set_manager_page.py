@@ -118,6 +118,55 @@ def test_upload_document_calls_api_client():
     assert fake_client.uploaded == [("s1", "note.txt", b"hello world")]
 
 
+def test_upload_multiple_documents_in_one_click():
+    document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
+    fake_client = _FakeApiClient(sets=[document_set], documents=[])
+    with patch("frontend.api_client.get_api_client", return_value=fake_client):
+        at = AppTest.from_file(_PAGE)
+        at.run()
+        at.file_uploader[0].set_value(
+            [
+                ("a.txt", b"hello", "text/plain"),
+                ("b.txt", b"world", "text/plain"),
+            ]
+        ).run()
+        upload_button = next(b for b in at.button if b.label == "Upload")
+        upload_button.click().run()
+
+    assert fake_client.uploaded == [
+        ("s1", "a.txt", b"hello"),
+        ("s1", "b.txt", b"world"),
+    ]
+
+
+def test_upload_multiple_documents_reports_partial_failure():
+    document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
+    fake_client = _FakeApiClient(sets=[document_set], documents=[])
+
+    def upload_document(set_id, filename, content):
+        if filename == "bad.txt":
+            raise Exception("Could not process 'bad.txt'.")
+        fake_client.uploaded.append((set_id, filename, content))
+
+    fake_client.upload_document = upload_document
+
+    with patch("frontend.api_client.get_api_client", return_value=fake_client):
+        at = AppTest.from_file(_PAGE)
+        at.run()
+        at.file_uploader[0].set_value(
+            [
+                ("good.txt", b"hello", "text/plain"),
+                ("bad.txt", b"world", "text/plain"),
+            ]
+        ).run()
+        upload_button = next(b for b in at.button if b.label == "Upload")
+        upload_button.click().run()
+
+    # The good file still uploads even though the bad one fails - one bad
+    # file in a batch doesn't block the rest.
+    assert fake_client.uploaded == [("s1", "good.txt", b"hello")]
+
+
 def test_remove_document_calls_api_client():
     document_set = DocumentSetView(id="s1", name="Contracts", created_at=datetime.now(timezone.utc))
     document = DocumentView(
